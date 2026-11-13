@@ -38,18 +38,26 @@ Integration credentials can alternatively be entered in **Admin → Integrations
 
 1. Import the Git repository in Vercel (framework preset: Next.js; build command `npm run build`; Node 20+).
 2. Add all environment variables. Set `NEXT_PUBLIC_APP_URL` to the production URL.
-3. **Cron jobs** are declared in `vercel.json`. Vercel sends `Authorization: Bearer $CRON_SECRET` automatically when `CRON_SECRET` is set. Several jobs run every 5–15 minutes, which needs a Vercel **Pro** plan. On Hobby (daily crons only), schedule the same endpoints from Supabase instead:
+3. **Cron jobs** — two layers, so it works on any Vercel plan:
+   - `vercel.json` runs every job **once a day** (allowed on Hobby). Vercel sends `Authorization: Bearer $CRON_SECRET` automatically when `CRON_SECRET` is set.
+   - Frequent schedules come from **Supabase pg_cron + pg_net** (free, plan-independent). After the first deploy, enable the `pg_cron` and `pg_net` extensions and schedule:
+
+   | Job | Schedule |
+   | --- | --- |
+   | email-outbox | every 5 min |
+   | live-reminders | every 10 min |
+   | scheduled-publishing, webhook-retries, video-sync | every 15 min |
+   | entitlement-expiry, assignment-reminders, live-artifacts, certificates | hourly |
 
    ```sql
-   -- Supabase → Database → Extensions: enable pg_cron and pg_net, then:
    select cron.schedule('foremint-email-outbox', '*/5 * * * *', $$
      select net.http_post(
        url := 'https://<your-domain>/api/cron/email-outbox',
        headers := jsonb_build_object('Authorization', 'Bearer <CRON_SECRET>')
      );
    $$);
-   -- repeat for each job listed in vercel.json
    ```
+   On Vercel **Pro** you can instead put these frequencies straight into `vercel.json`.
 
 4. **Custom domain**: Vercel → Project → Domains → add the domain, create the DNS records Vercel shows, then update `NEXT_PUBLIC_APP_URL`, Supabase Auth URLs, and every webhook / OAuth redirect URL to the new domain.
 

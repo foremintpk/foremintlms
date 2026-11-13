@@ -25,7 +25,7 @@ let fontsReady: boolean | null = null;
 
 function registerFonts(): boolean {
   if (fontsReady !== null) return fontsReady;
-  const abs = Object.fromEntries(Object.entries(FONT_FILES).map(([k, v]) => [k, path.join(ROOT, v)])) as Record<keyof typeof FONT_FILES, string>;
+  const abs = Object.fromEntries(Object.entries(FONT_FILES).map(([k, v]) => [k, path.join(/*turbopackIgnore: true*/ ROOT, v)])) as Record<keyof typeof FONT_FILES, string>;
   if (!Object.values(abs).every((p) => fs.existsSync(p))) {
     fontsReady = false;
     return false;
@@ -50,7 +50,7 @@ function registerFonts(): boolean {
 }
 
 function brandMark(): Buffer | null {
-  const p = path.join(ROOT, MARK_FILE);
+  const p = path.join(/*turbopackIgnore: true*/ ROOT, MARK_FILE);
   return fs.existsSync(p) ? fs.readFileSync(p) : null;
 }
 

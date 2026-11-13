@@ -1,8 +1,55 @@
 import type { NextConfig } from "next";
+import { PHASE_PRODUCTION_BUILD } from "next/constants";
+
+/**
+ * The three PUBLIC values the browser needs. Either the NEXT_PUBLIC_ name or
+ * the plain alias works (e.g. SUPABASE_URL), so hosting dashboards that
+ * discourage the NEXT_PUBLIC_ prefix are fine. Never add secrets here: these
+ * values are inlined into the JavaScript bundle.
+ */
+const PUBLIC_VARS = {
+  NEXT_PUBLIC_SUPABASE_URL: ["NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_URL"],
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: [
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+    "SUPABASE_PUBLISHABLE_KEY",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "SUPABASE_ANON_KEY",
+  ],
+  NEXT_PUBLIC_APP_URL: ["NEXT_PUBLIC_APP_URL", "APP_URL"],
+} as const;
+
+function resolvePublicEnv(): Record<string, string> {
+  const resolved: Record<string, string> = {};
+  for (const [name, candidates] of Object.entries(PUBLIC_VARS)) {
+    const value = candidates.map((c) => process.env[c]?.trim()).find((v) => v);
+    if (value) resolved[name] = value;
+  }
+  return resolved;
+}
+
+const publicEnvValues = resolvePublicEnv();
+
+/**
+ * Public pages are prerendered from Supabase at build time, so a build
+ * without these variables cannot succeed. Fail immediately with a clear
+ * message instead of a vague "Failed to collect page data" later.
+ */
+function assertBuildEnv() {
+  const missing = (["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"] as const)
+    .filter((name) => !publicEnvValues[name])
+    .map((name) => `${name} (or ${PUBLIC_VARS[name][1]})`);
+  if (missing.length > 0) {
+    throw new Error(
+      `\n\nForemint Academy build: missing environment variable(s): ${missing.join(", ")}.\n` +
+        "Add them in Vercel → Project → Settings → Environment Variables (Production and Preview), then redeploy.\n" +
+        "See .env.example and docs/DEPLOYMENT.md for the full list.\n",
+    );
+  }
+}
 
 const supabaseHost = (() => {
   try {
-    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").hostname;
+    return new URL(publicEnvValues.NEXT_PUBLIC_SUPABASE_URL ?? "").hostname;
   } catch {
     return "avijlwhtadinxpfpddhi.supabase.co";
   }
@@ -20,6 +67,8 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   poweredByHeader: false,
+  // Inline the resolved public values under their NEXT_PUBLIC_ names.
+  env: publicEnvValues,
   turbopack: {
     rules: {
       "*.css": {
@@ -59,4 +108,7 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default function config(phase: string): NextConfig {
+  if (phase === PHASE_PRODUCTION_BUILD) assertBuildEnv();
+  return nextConfig;
+}
