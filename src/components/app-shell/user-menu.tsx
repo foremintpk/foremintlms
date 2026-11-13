@@ -27,7 +27,7 @@ import type { ShellUser } from "./types";
 export function UserMenu({ user, area }: { user: ShellUser; area: ShellArea }) {
   const { theme, setTheme } = useTheme();
   const [pending, startTransition] = useTransition();
-  const settingsHref = area === "admin" ? "/admin/settings" : `/${area}/settings`;
+  const settingsHref = area === "admin" ? "/admin/account" : `/${area}/settings`;
 
   return (
     <DropdownMenu>
