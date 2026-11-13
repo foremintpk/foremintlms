@@ -12,6 +12,11 @@ This guide takes Foremint Academy from an empty Supabase project to a live Verce
 1. **Apply migrations** in `supabase/migrations/` in filename order. They are additive and idempotent where possible; never run them against a production database without a backup (Dashboard → Database → Backups) and a review of what changes.
    - With the Supabase MCP server (`.mcp.json`): ask Claude to apply the migrations.
    - With the CLI: `npx supabase link --project-ref <ref>` then `npx supabase db push`.
+   > **This project (`avijlwhtadinxpfpddhi`) was migrated through the Supabase MCP**, which records its own migration names/versions (the larger files were applied in smaller parts). Its schema matches `supabase/migrations/`, but the CLI history does not. Before ever running `supabase db push` against it, mark the repository files as applied so they are not re-run:
+   > ```bash
+   > npx supabase migration repair --status applied $(ls supabase/migrations | cut -c1-14 | tr '\n' ' ')
+   > ```
+   > The session-management RPCs (`list_my_sessions`, `revoke_my_session`, `revoke_user_sessions`) were intentionally not created; the app uses `signOut({ scope: "others" })` and account bans instead.
 2. **Run the RLS test suite** `supabase/tests/rls_security_test.sql` in the SQL editor. It always rolls back; success is the message `RLS_SUITE_PASSED`. Any other error names the rule that failed.
 3. **Auth → URL configuration**
    - Site URL: `https://<your-domain>`

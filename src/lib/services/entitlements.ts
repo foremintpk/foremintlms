@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { notify } from "@/lib/services/notifications";
 import { appUrl } from "@/lib/env";
 import { formatDate } from "@/lib/format";
+import type { TablesUpdate } from "@/types/database";
 
 /**
  * The entitlement system is the single source of truth for course access.
@@ -154,7 +155,7 @@ export async function setSubscriptionAccess(
   target: { status: "active" | "expired" | "revoked" | "suspended"; expiresAt: Date | null; reason: string },
 ): Promise<number> {
   const admin = createAdminClient();
-  const update: Record<string, unknown> = {
+  const update: TablesUpdate<"course_entitlements"> = {
     status: target.status,
     expires_at: target.expiresAt ? target.expiresAt.toISOString() : null,
   };
