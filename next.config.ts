@@ -30,6 +30,21 @@ const nextConfig: NextConfig = {
   },
   // Packages with native/Node-only internals used in route handlers.
   serverExternalPackages: ["@react-pdf/renderer", "sharp"],
+  // Fonts and logo read from disk by PDF and OG-image routes must be bundled
+  // into those serverless functions on Vercel.
+  outputFileTracingIncludes: {
+    "/api/certificates/[id]/pdf": [
+      "./node_modules/@fontsource/funnel-display/files/*-latin-*-normal.woff",
+      "./node_modules/@fontsource/funnel-sans/files/*-latin-*-normal.woff",
+      "./public/brand/foremint-mark-256.png",
+    ],
+    "/api/billing/documents/[id]/pdf": [
+      "./node_modules/@fontsource/funnel-display/files/*-latin-*-normal.woff",
+      "./node_modules/@fontsource/funnel-sans/files/*-latin-*-normal.woff",
+      "./public/brand/foremint-mark-256.png",
+    ],
+    "/**/opengraph-image*": ["./src/components/site/og/fonts/*"],
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [

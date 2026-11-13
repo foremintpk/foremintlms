@@ -1,17 +1,32 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createPublicClient } from "@/lib/supabase/public";
 
 export const SETTINGS_TAG = "platform-settings";
 
 type Json = string | number | boolean | null | Json[] | { [k: string]: Json };
 
+/** Every setting (server-only values included). Needs the secret key. */
 async function loadAllSettings(): Promise<Record<string, Json>> {
   "use cache";
   cacheTag(SETTINGS_TAG);
   cacheLife("minutes");
   const { data, error } = await createAdminClient().from("platform_settings").select("key, value");
   if (error) throw new Error(`Could not load platform settings: ${error.message}`);
+  return Object.fromEntries((data ?? []).map((row) => [row.key, row.value as Json]));
+}
+
+/**
+ * Only settings flagged public, read with the anonymous key (RLS enforces
+ * is_public). Public pages use this, so they never touch the secret key.
+ */
+async function loadPublicSettingsRows(): Promise<Record<string, Json>> {
+  "use cache";
+  cacheTag(SETTINGS_TAG);
+  cacheLife("minutes");
+  const { data, error } = await createPublicClient().from("platform_settings").select("key, value").eq("is_public", true);
+  if (error) throw new Error(`Could not load public settings: ${error.message}`);
   return Object.fromEntries((data ?? []).map((row) => [row.key, row.value as Json]));
 }
 
@@ -46,7 +61,7 @@ export interface PublicSettings {
 
 /** Settings that are safe to render on public pages. */
 export async function getPublicSettings(): Promise<PublicSettings> {
-  const all = await loadAllSettings();
+  const all = await loadPublicSettingsRows();
   const str = (k: string, d = "") => (typeof all[k] === "string" ? (all[k] as string) : d);
   return {
     brandName: str("brand.name", "Foremint Academy"),

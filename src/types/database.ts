@@ -131,6 +131,42 @@ export type Database = {
           },
         ]
       }
+      assignment_deadline_reminders: {
+        Row: {
+          assignment_id: string
+          due_at: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          assignment_id: string
+          due_at: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          assignment_id?: string
+          due_at?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_deadline_reminders_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_deadline_reminders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assignment_feedback: {
         Row: {
           author_id: string | null
@@ -1312,6 +1348,7 @@ export type Database = {
       }
       course_discussions: {
         Row: {
+          answered_at: string | null
           author_id: string | null
           body: string
           course_id: string
@@ -1331,6 +1368,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          answered_at?: string | null
           author_id?: string | null
           body: string
           course_id: string
@@ -1350,6 +1388,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          answered_at?: string | null
           author_id?: string | null
           body?: string
           course_id?: string
@@ -5073,6 +5112,82 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_assignment_performance: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          avg_score_percent: number
+          course_id: string
+          graded: number
+          pending: number
+          submissions: number
+          title: string
+        }[]
+      }
+      admin_course_stats: {
+        Args: { p_from: string; p_limit?: number; p_to: string }
+        Returns: {
+          avg_progress: number
+          completed: number
+          completion_rate: number
+          course_id: string
+          enrollments_new: number
+          enrollments_total: number
+          status: string
+          title: string
+        }[]
+      }
+      admin_instructor_activity: {
+        Args: { p_from: string; p_to: string }
+        Returns: {
+          courses: number
+          graded: number
+          live_sessions: number
+          name: string
+          replies: number
+          students: number
+          user_id: string
+        }[]
+      }
+      admin_overview_metrics: {
+        Args: { p_from: string; p_to: string }
+        Returns: Json
+      }
+      admin_search_users: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_query?: string
+          p_role?: Database["public"]["Enums"]["app_role"]
+          p_sort?: string
+          p_status?: string
+        }
+        Returns: {
+          avatar_url: string
+          created_at: string
+          deletion_requested_at: string
+          email: string
+          enrollments_count: number
+          full_name: string
+          id: string
+          last_sign_in_at: string
+          roles: string[]
+          status: string
+          total_count: number
+        }[]
+      }
+      admin_timeseries: {
+        Args: {
+          p_bucket?: string
+          p_currency?: string
+          p_from: string
+          p_metric: string
+          p_to: string
+        }
+        Returns: {
+          bucket: string
+          value: number
+        }[]
+      }
       check_rate_limit: {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: boolean
@@ -5103,6 +5218,90 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      claim_failed_webhook_events: {
+        Args: { p_limit?: number; p_provider: string }
+        Returns: {
+          attempts: number
+          event_id: string
+          event_type: string
+          id: string
+          last_error: string | null
+          next_attempt_at: string | null
+          payload: Json
+          processed_at: string | null
+          provider: string
+          received_at: string
+          status: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "webhook_events"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      copy_bank_questions_to_quiz: {
+        Args: { p_question_ids: string[]; p_quiz: string }
+        Returns: number
+      }
+      course_discussion_members: {
+        Args: { p_course: string; p_limit?: number; p_search?: string }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          is_instructor: boolean
+          user_id: string
+        }[]
+      }
+      get_published_course_reviews: {
+        Args: { p_course: string; p_limit?: number }
+        Returns: {
+          body: string
+          created_at: string
+          id: string
+          rating: number
+          reviewer_name: string
+          title: string
+          verified_enrollment: boolean
+        }[]
+      }
+      increment_coupon_redemptions: {
+        Args: { p_whop_promo_code_id: string }
+        Returns: number
+      }
+      increment_plan_units_sold: { Args: { p_plan: string }; Returns: number }
+      list_message_contacts: {
+        Args: { p_limit?: number; p_search?: string }
+        Returns: {
+          avatar_url: string
+          context: string
+          full_name: string
+          role: string
+          user_id: string
+        }[]
+      }
+      list_my_conversations: {
+        Args: { p_limit?: number; p_search?: string }
+        Returns: {
+          conversation_id: string
+          course_id: string
+          course_title: string
+          created_at: string
+          is_muted: boolean
+          kind: string
+          last_message_at: string
+          last_message_body: string
+          last_message_sender_id: string
+          last_read_at: string
+          other_avatar_url: string
+          other_name: string
+          other_role: string
+          other_user_id: string
+          subject: string
+          unread_count: number
+        }[]
+      }
+      next_billing_document_number: { Args: never; Returns: number }
       recalculate_enrollment_progress: {
         Args: { p_course: string; p_user: string }
         Returns: number
@@ -5111,9 +5310,109 @@ export type Database = {
         Args: { p_older_than_minutes?: number }
         Returns: number
       }
+      release_stale_webhook_events: {
+        Args: { p_older_than_minutes?: number; p_provider: string }
+        Returns: number
+      }
+      reorder_curriculum: {
+        Args: { p_course: string; p_structure: Json }
+        Returns: undefined
+      }
+      reorder_lesson_blocks: {
+        Args: { p_block_ids: string[]; p_lesson: string }
+        Returns: undefined
+      }
+      reorder_lesson_resources: {
+        Args: { p_lesson: string; p_resource_ids: string[] }
+        Returns: undefined
+      }
+      reorder_quiz_questions: {
+        Args: { p_question_ids: string[]; p_quiz: string }
+        Returns: undefined
+      }
+      save_quiz_question: {
+        Args: { p_options: Json; p_question: Json }
+        Returns: Json
+      }
+      search_my_messages: {
+        Args: { p_limit?: number; p_query: string }
+        Returns: {
+          body: string
+          conversation_id: string
+          created_at: string
+          message_id: string
+          other_name: string
+          sender_id: string
+          sender_name: string
+        }[]
+      }
       start_direct_conversation: {
         Args: { p_course?: string; p_other: string; p_subject?: string }
         Returns: string
+      }
+      teacher_assignment_stats: {
+        Args: { p_course_ids: string[]; p_from: string; p_to: string }
+        Returns: {
+          assignment_id: string
+          avg_grade_percent: number
+          course_id: string
+          graded: number
+          late: number
+          max_points: number
+          pending: number
+          resubmission_requested: number
+          submissions: number
+          title: string
+        }[]
+      }
+      teacher_course_completion: {
+        Args: { p_course_ids: string[]; p_from?: string; p_to?: string }
+        Returns: {
+          avg_progress: number
+          completed: number
+          course_id: string
+          enrollments: number
+        }[]
+      }
+      teacher_enrollment_series: {
+        Args: {
+          p_bucket?: string
+          p_course_ids: string[]
+          p_from: string
+          p_to: string
+        }
+        Returns: {
+          bucket_start: string
+          enrollments: number
+        }[]
+      }
+      teacher_lesson_dropoff: {
+        Args: { p_course_id: string }
+        Returns: {
+          completed_students: number
+          enrolled_students: number
+          lesson_id: string
+          lesson_title: string
+          module_title: string
+          position: number
+        }[]
+      }
+      teacher_quiz_stats: {
+        Args: { p_course_ids: string[]; p_from: string; p_to: string }
+        Returns: {
+          attempts: number
+          avg_percent: number
+          awaiting_review: number
+          course_id: string
+          pass_rate: number
+          quiz_id: string
+          students: number
+          title: string
+        }[]
+      }
+      teacher_student_count: {
+        Args: { p_course_ids: string[] }
+        Returns: number
       }
     }
     Enums: {

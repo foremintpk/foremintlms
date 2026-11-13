@@ -25,8 +25,9 @@ export const pricingPlanSchema = z
     if (p.plan_type === "free" && p.price_cents !== 0) {
       ctx.addIssue({ code: "custom", path: ["price_cents"], message: "Free plans cost 0" });
     }
-    if (p.plan_type !== "free" && p.price_cents < 50) {
-      ctx.addIssue({ code: "custom", path: ["price_cents"], message: "Paid plans must cost at least 0.50" });
+    // Whop's minimum charge is 1.00 in the plan currency.
+    if (p.plan_type !== "free" && p.price_cents < 100) {
+      ctx.addIssue({ code: "custom", path: ["price_cents"], message: "Paid plans must cost at least 1.00" });
     }
     if (p.plan_type === "recurring" && !p.billing_period_days) {
       ctx.addIssue({ code: "custom", path: ["billing_period_days"], message: "Choose a billing interval" });

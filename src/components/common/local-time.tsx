@@ -4,6 +4,36 @@ import { useSyncExternalStore } from "react";
 
 const subscribe = () => () => {};
 
+// Shared ticking clock for relative times ("5 minutes ago"): one interval
+// for every mounted LocalTime, read through useSyncExternalStore so render
+// stays pure.
+let clockNow = 0;
+let clockTimer: ReturnType<typeof setInterval> | null = null;
+const clockListeners = new Set<() => void>();
+
+function subscribeClock(listener: () => void) {
+  clockListeners.add(listener);
+  if (!clockTimer) {
+    clockNow = Date.now();
+    clockTimer = setInterval(() => {
+      clockNow = Date.now();
+      for (const l of clockListeners) l();
+    }, 30_000);
+  }
+  return () => {
+    clockListeners.delete(listener);
+    if (clockListeners.size === 0 && clockTimer) {
+      clearInterval(clockTimer);
+      clockTimer = null;
+    }
+  };
+}
+
+function readClock() {
+  if (!clockNow) clockNow = Date.now();
+  return clockNow;
+}
+
 /**
  * Renders a UTC timestamp in the viewer's own time zone. The server renders
  * a UTC fallback (no hydration mismatch), the browser swaps in local time.
@@ -22,13 +52,14 @@ export function LocalTime({
     () => true,
     () => false,
   );
+  const now = useSyncExternalStore(subscribeClock, readClock, () => 0);
   if (!value) return <span className={className}>—</span>;
   const date = new Date(value);
   const tz = isClient ? undefined : "UTC";
 
   let text: string;
   if (format === "relative" && isClient) {
-    const diff = date.getTime() - Date.now();
+    const diff = date.getTime() - now;
     const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
     const abs = Math.abs(diff);
     const units: [Intl.RelativeTimeFormatUnit, number][] = [

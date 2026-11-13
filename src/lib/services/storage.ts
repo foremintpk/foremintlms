@@ -338,11 +338,14 @@ export async function canDownloadMedia(user: SessionUser, mediaFileId: string): 
         const role = await getCourseRole(user, file.course_id);
         if (role.isInstructor) return true;
       }
-      const [blocks, resources] = await Promise.all([
+      // Each lookup goes through RLS, so a match proves this user may see the
+      // lesson / assignment that references the file.
+      const [blocks, resources, assignments] = await Promise.all([
         supabase.from("lesson_content_blocks").select("id").eq("media_file_id", file.id).limit(1),
         supabase.from("lesson_resources").select("id").eq("media_file_id", file.id).limit(1),
+        supabase.from("assignments").select("id").contains("supporting_media_ids", [file.id]).limit(1),
       ]);
-      return Boolean(blocks.data?.length || resources.data?.length);
+      return Boolean(blocks.data?.length || resources.data?.length || assignments.data?.length);
     }
     case "live_resource": {
       const { data } = await supabase.from("live_session_resources").select("id").eq("media_file_id", file.id).limit(1);

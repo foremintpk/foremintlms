@@ -55,9 +55,12 @@ export function entitlementForMembership(m: MembershipSnapshot, graceDays: numbe
         return { status: "active", expiresAt: withGrace, reason: "Payment past due — in grace period" };
       }
       return { status: "expired", expiresAt: withGrace ?? now, reason: "Payment past due" };
+    case "completed":
+      // Whop marks a fully paid split-pay plan "completed"; the buyer keeps
+      // access (until the final period end, or indefinitely if none is set).
+      return { status: "active", expiresAt: periodEnd, reason: "Membership completed" };
     case "canceled":
     case "expired":
-    case "completed":
       // Ended memberships keep access only until a period end still in the future.
       if (periodEnd && periodEnd.getTime() > now.getTime() && m.status === "canceled") {
         return { status: "active", expiresAt: periodEnd, reason: "Cancelled — access until period end" };
