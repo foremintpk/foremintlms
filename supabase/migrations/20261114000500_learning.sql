@@ -47,7 +47,9 @@ create table public.course_entitlements (
   updated_at timestamptz not null default now(),
   check ((scope = 'course' and course_id is not null) or (scope = 'all_access' and course_id is null)),
   check (expires_at is null or expires_at > starts_at),
-  check (source <> 'manual' or (granted_by is not null and grant_reason is not null))
+  -- Manual grants must be justified. granted_by is recorded by the server and
+  -- may later become null if that administrator's account is deleted.
+  check (source <> 'manual' or grant_reason is not null)
 );
 create index course_entitlements_user_course_idx on public.course_entitlements (user_id, course_id, status);
 create index course_entitlements_user_scope_idx on public.course_entitlements (user_id, scope, status);

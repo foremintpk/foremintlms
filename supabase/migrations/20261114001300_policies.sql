@@ -148,8 +148,9 @@ begin
     or new.status is distinct from old.status
     or new.course_id is distinct from old.course_id
     or new.author_id is distinct from old.author_id
-    or new.reply_count is distinct from old.reply_count
   then
+    -- reply_count / last_activity_at are maintained by private.touch_discussion
+    -- when anyone replies, so they are intentionally not guarded here.
     raise exception 'Only course staff can moderate discussions' using errcode = '42501';
   end if;
   return new;

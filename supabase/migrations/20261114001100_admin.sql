@@ -69,13 +69,21 @@ create index audit_logs_created_idx on public.audit_logs (created_at desc);
 create index audit_logs_entity_idx on public.audit_logs (entity_type, entity_id);
 create index audit_logs_actor_idx on public.audit_logs (actor_id, created_at desc);
 
--- Audit rows are append-only, even for the service role.
+-- Audit rows are append-only, even for the service role. The single allowed
+-- change is the foreign-key action that clears actor_id when an account is
+-- deleted (the entry itself, including its summary, is preserved).
 create or replace function private.prevent_audit_mutation()
 returns trigger
 language plpgsql
 set search_path = ''
 as $$
 begin
+  if tg_op = 'UPDATE'
+     and new.actor_id is null
+     and old.actor_id is not null
+     and (to_jsonb(new) - 'actor_id') = (to_jsonb(old) - 'actor_id') then
+    return new;
+  end if;
   raise exception 'audit_logs is append-only';
 end;
 $$;
