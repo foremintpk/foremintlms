@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Foremint Academy">
+  <rect x="16" y="13" width="10" height="38" rx="5" fill="#FFFFFF"/>
+  <rect x="16" y="13" width="31" height="10" rx="5" fill="#FFFFFF"/>
+  <path d="M24.5 42.5C26 31.5 35 26.5 48 27.5C47 39 37.5 44.5 24.5 42.5Z" fill="#3DDC97"/>
+</svg>
