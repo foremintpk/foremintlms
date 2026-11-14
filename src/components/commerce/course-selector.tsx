@@ -25,7 +25,15 @@ export function CourseSelector({ catalog }: { catalog: SelectorCatalog }) {
   const [category, setCategory] = useState<string>("all");
   const [sort, setSort] = useState<Sort>("recommended");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const duration = cart.cart?.duration ?? catalog.defaultDuration;
+  // The chosen period applies instantly (prices come from the catalogue); the cart syncs in the background.
+  const [pickedDuration, setPickedDuration] = useState<string | null>(null);
+  const duration = pickedDuration ?? cart.cart?.duration ?? catalog.defaultDuration;
+  const pickDuration = (key: string) => {
+    if (key === duration) return;
+    setPickedDuration(key);
+    // Once the server answers, its period wins (the same one on success; the previous one on failure).
+    void cart.setDuration(key).finally(() => setPickedDuration(null));
+  };
   const selectedCount = cart.cart?.courseIds.length ?? 0;
   const limitReached = catalog.maxCourses !== null && selectedCount >= catalog.maxCourses;
 
@@ -125,7 +133,7 @@ export function CourseSelector({ catalog }: { catalog: SelectorCatalog }) {
                       type="button"
                       role="radio"
                       aria-checked={duration === d.key}
-                      onClick={() => void cart.setDuration(d.key)}
+                      onClick={() => pickDuration(d.key)}
                       className={cn(
                         "h-9 rounded-lg px-3.5 text-sm font-medium transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 outline-none",
                         duration === d.key ? "bg-card text-foreground shadow-card" : "text-muted-foreground hover:text-foreground",

@@ -416,11 +416,11 @@ function ChatCart({ onOption, live, busy }: { onOption: (o: AdvisorOption) => vo
       <p className="text-sm font-semibold">
         {cart.lines.length} selected {cart.lines.length === 1 ? "course" : "courses"}
       </p>
-      <ul className="mt-2 grid gap-1.5">
+      <ul className="mt-2 grid grid-cols-1 gap-1.5">
         {cart.lines.map((l) => (
-          <li key={l.courseId} className="flex items-center gap-2 text-sm">
+          <li key={l.courseId} className="flex min-w-0 items-center gap-2 text-sm">
             <span className="min-w-0 flex-1 truncate">{l.title}</span>
-            <span className="tabular-nums">{formatMinor(l.priceMinor, cart.currency)}</span>
+            <span className="shrink-0 whitespace-nowrap tabular-nums">{formatMinor(l.priceMinor, cart.currency)}</span>
             <button type="button" onClick={() => void remove(l.courseId, { silent: true })} disabled={pendingIds.has(l.courseId)} aria-label={`Remove ${l.title}`} className="grid size-6 place-items-center rounded-md text-muted-foreground hover:bg-muted">
               <X className="size-3.5" />
             </button>

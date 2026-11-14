@@ -28,7 +28,7 @@ export function CartSummary({
   title?: string;
   onNavigate?: () => void;
 }) {
-  const { cart, loading, pendingIds, remove, clear } = useCart();
+  const { cart, loading, pendingIds, remove, clear, busy } = useCart();
   const [confirmClear, setConfirmClear] = useState(false);
   const count = cart?.lines.length ?? 0;
 
@@ -56,17 +56,17 @@ export function CartSummary({
         </div>
       ) : (
         <>
-          <ul className="mt-4 grid gap-2" data-testid="cart-lines">
+          <ul className="mt-4 grid grid-cols-1 gap-2" data-testid="cart-lines">
             {cart!.lines.map((line) => (
-              <li key={line.courseId} className="flex items-start gap-3 rounded-xl bg-muted/40 p-2.5" data-testid="cart-line">
+              <li key={line.courseId} className="flex min-w-0 items-start gap-3 rounded-xl bg-muted/40 p-2.5" data-testid="cart-line">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium" title={line.title}>
+                  <p className="line-clamp-2 text-sm leading-snug font-medium" title={line.title}>
                     {line.title}
                   </p>
                   {line.category ? <p className="truncate text-xs text-muted-foreground">{line.category}</p> : null}
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold tabular-nums" data-testid="cart-line-price">
+                <div className="shrink-0 text-right">
+                  <p className="text-sm font-semibold whitespace-nowrap tabular-nums" data-testid="cart-line-price">
                     {formatMinor(line.priceMinor, cart!.currency)}
                   </p>
                   {line.compareAtMinor ? <p className="text-xs text-muted-foreground line-through tabular-nums">{formatMinor(line.compareAtMinor, cart!.currency)}</p> : null}
@@ -85,7 +85,7 @@ export function CartSummary({
               </li>
             ))}
             {cart!.unavailable.map((u) => (
-              <li key={u.courseId} className="flex items-start gap-3 rounded-xl border border-warning/30 bg-warning-soft p-2.5 text-sm" data-testid="cart-unavailable">
+              <li key={u.courseId} className="flex min-w-0 items-start gap-3 rounded-xl border border-warning/30 bg-warning-soft p-2.5 text-sm" data-testid="cart-unavailable">
                 <p className="min-w-0 flex-1 text-foreground">{u.message}</p>
                 {editable ? (
                   <button type="button" onClick={() => void remove(u.courseId)} className="shrink-0 text-xs font-semibold text-foreground underline underline-offset-2">
@@ -98,7 +98,7 @@ export function CartSummary({
 
           {editable && count > 0 ? <CouponForm className="mt-4" /> : null}
 
-          <CartTotals cart={cart!} className="mt-4" />
+          <CartTotals cart={cart!} className={cn("mt-4 transition-opacity", busy && "opacity-50")} />
 
           {cart!.blockers.length && count > 0 ? (
             <p className="mt-3 rounded-xl bg-warning-soft px-3 py-2 text-xs text-foreground" role="status">

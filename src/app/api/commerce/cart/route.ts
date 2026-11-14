@@ -60,12 +60,12 @@ export async function POST(req: Request) {
     const body = opSchema.safeParse(await req.json().catch(() => null));
     if (!body.success) return respond({ ok: false, error: body.error.issues[0]?.message ?? "Invalid request." }, 400);
     const input = body.data;
-    const email = await accountEmail();
+    const emailPromise = accountEmail();
 
     if (input.op === "clear") {
       const existing = await loadCart();
       const cart = existing ? await saveCart(existing, { course_ids: [], coupon_code: null }) : null;
-      return respond({ ok: true, cart: await cartView(cart, { accountEmail: email }), message: "Your learning package is empty." });
+      return respond({ ok: true, cart: await cartView(cart, { accountEmail: await emailPromise }), message: "Your learning package is empty." });
     }
 
     let cart = await getOrCreateCart();
@@ -75,7 +75,7 @@ export async function POST(req: Request) {
         const res = await addCoursesToCart(cart, input.courseIds);
         cart = res.cart;
         if (res.rejected) {
-          return respond({ ok: false, error: res.rejected, cart: await cartView(cart, { accountEmail: email }) }, 409);
+          return respond({ ok: false, error: res.rejected, cart: await cartView(cart, { accountEmail: await emailPromise }) }, 409);
         }
         message = res.added.length === 1 ? "Added to your learning package." : res.added.length > 1 ? `${res.added.length} courses added to your learning package.` : "Already in your learning package.";
         break;
@@ -101,14 +101,14 @@ export async function POST(req: Request) {
         const quote = await quoteCart(candidate);
         const evaluation = quote.coupon?.evaluation;
         if (!evaluation || !evaluation.ok) {
-          return respond({ ok: false, error: evaluation && !evaluation.ok ? evaluation.message : "That code isn't valid.", cart: await cartView(cart, { accountEmail: email }) }, 422);
+          return respond({ ok: false, error: evaluation && !evaluation.ok ? evaluation.message : "That code isn't valid.", cart: await cartView(cart, { accountEmail: await emailPromise }) }, 422);
         }
         cart = await saveCart(cart, { coupon_code: input.code.toUpperCase() });
         message = `${evaluation.label} applied.`;
         break;
       }
     }
-    return respond({ ok: true, cart: await cartView(cart, { accountEmail: email }), message });
+    return respond({ ok: true, cart: await cartView(cart, { accountEmail: await emailPromise }), message });
   } catch (err) {
     return apiError(err);
   }

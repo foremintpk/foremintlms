@@ -75,8 +75,10 @@ export function AdvisorWidget({ config }: { config: AdvisorPublicConfig }) {
         />
       ) : null}
       <div
-        className={cn("fixed left-4 z-40 flex flex-col-reverse items-start gap-2.5 transition-opacity sm:left-6", open && "pointer-events-none opacity-0")}
-        style={{ bottom: "calc(1rem + var(--fm-floating-offset, 0px))" }}
+        className={cn(
+          "fixed bottom-[calc(1rem+var(--fm-floating-offset,0px))] left-4 z-40 flex flex-col-reverse items-start gap-2.5 transition-[opacity,bottom] duration-300 sm:left-6 lg:bottom-6",
+          open && "pointer-events-none opacity-0",
+        )}
       >
         <button
           type="button"

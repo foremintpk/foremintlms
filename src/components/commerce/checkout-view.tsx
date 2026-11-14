@@ -253,9 +253,9 @@ function OrderSummaryCard() {
           <ArrowLeft className="size-3.5" aria-hidden /> Edit package
         </Link>
       </div>
-      <ul className="mt-4 grid gap-3">
+      <ul className="mt-4 grid grid-cols-1 gap-3">
         {cart.lines.map((line) => (
-          <li key={line.courseId} className="flex items-center gap-3" data-testid="summary-line">
+          <li key={line.courseId} className="flex min-w-0 items-center gap-3" data-testid="summary-line">
             <div className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-muted">
               <MediaImage src={line.thumbnailUrl} alt="" sizes="56px" />
             </div>
@@ -267,7 +267,7 @@ function OrderSummaryCard() {
                 {[line.category, cart.durationLabel ? (cart.durationLabel === "Lifetime" ? "Lifetime access" : `${cart.durationLabel} access`) : null].filter(Boolean).join(" · ")}
               </p>
             </div>
-            <p className="text-sm font-semibold tabular-nums">{formatMinor(line.priceMinor, cart.currency)}</p>
+            <p className="shrink-0 text-sm font-semibold whitespace-nowrap tabular-nums">{formatMinor(line.priceMinor, cart.currency)}</p>
             <button
               type="button"
               onClick={() => void remove(line.courseId)}

@@ -155,7 +155,7 @@ export async function quoteCart(cart: CartRow | null, opts: { emailOverride?: st
 export async function cartView(cart: CartRow | null, opts: { accountEmail?: string | null } = {}): Promise<CartView> {
   if (!cart || (cart.course_ids.length === 0 && !cart.coupon_code)) {
     const settings = await getSelectorSettings();
-    const quote = await quoteBasket({ courseIds: [], duration: cart?.access_duration ?? null, couponCode: null });
+    const [quote, lastOrder] = await Promise.all([quoteBasket({ courseIds: [], duration: cart?.access_duration ?? null, couponCode: null }), lastOrderView(cart)]);
     return {
       ...emptyCartView(settings.currency),
       duration: quote.duration,
@@ -164,9 +164,9 @@ export async function cartView(cart: CartRow | null, opts: { accountEmail?: stri
       maxCourses: quote.maxCourses,
       email: cart?.learner_email ?? null,
       accountEmail: opts.accountEmail ?? null,
-      lastOrder: await lastOrderView(cart),
+      lastOrder,
     };
   }
-  const quote = await quoteCart(cart);
-  return quoteToView(quote, { email: cart.learner_email, accountEmail: opts.accountEmail ?? null, lastOrder: await lastOrderView(cart), courseIds: cart.course_ids });
+  const [quote, lastOrder] = await Promise.all([quoteCart(cart), lastOrderView(cart)]);
+  return quoteToView(quote, { email: cart.learner_email, accountEmail: opts.accountEmail ?? null, lastOrder, courseIds: cart.course_ids });
 }
