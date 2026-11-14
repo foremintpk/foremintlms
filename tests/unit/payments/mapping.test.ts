@@ -170,17 +170,25 @@ describe("checkout metadata", () => {
 describe("plan → Whop variant", () => {
   it("one-time plans charge an initial price and carry the access length", () => {
     const v = planToVariantPayload(plan({ access_duration_days: 90, price_cents: 4900 }), "prod-local");
-    expect(v).toMatchObject({ billing_type: "one_time", initial_price: 49, renewal_price: null, expiration_days: 90, visibility: "hidden" });
+    expect(v).toMatchObject({ billing_type: "one_time", initial_price: 49, renewal_price: 0, expiration_days: 90, visibility: "hidden" });
+    // Whop rejects null prices: one-time variants must not carry subscription-only fields.
+    expect(v).not.toHaveProperty("billing_period");
+    expect(v).not.toHaveProperty("trial_period_days");
+    expect(Object.values(v).filter((x) => x === undefined)).toHaveLength(0);
+    expect(planToVariantPayload(plan({ access_duration_days: null }), "p")).toMatchObject({ expiration_days: null, renewal_price: 0 });
     expect(v.metadata).toEqual({ foremint_plan_id: plan().id, foremint_product_id: "prod-local" });
   });
   it("subscriptions charge the renewal price each period, with trial", () => {
     const v = planToVariantPayload(plan({ plan_type: "recurring", price_cents: 1900, billing_period_days: 30, trial_days: 7 }), "p");
-    expect(v).toMatchObject({ billing_type: "renewal", initial_price: 0, renewal_price: 19, billing_period: 30, trial_period_days: 7, expiration_days: null });
+    expect(v).toMatchObject({ billing_type: "renewal", initial_price: 0, renewal_price: 19, billing_period: 30, trial_period_days: 7 });
+    expect(v).not.toHaveProperty("expiration_days");
+    expect(planToVariantPayload(plan({ plan_type: "recurring", price_cents: 1900, billing_period_days: 30, trial_days: null }), "p")).toMatchObject({ trial_period_days: 0 });
   });
   it("limited stock syncs the remaining places", () => {
     const v = planToVariantPayload(plan({ stock_limit: 50, units_sold: 12 }), "p");
     expect(v).toMatchObject({ unlimited_stock: false, stock: 38 });
-    expect(planToVariantPayload(plan(), "p")).toMatchObject({ unlimited_stock: true, stock: null });
+    expect(planToVariantPayload(plan(), "p")).toMatchObject({ unlimited_stock: true });
+    expect(planToVariantPayload(plan(), "p")).not.toHaveProperty("stock");
   });
   it("archived plans are archived on Whop; others stay hidden from Whop's storefront", () => {
     expect(planToVariantPayload(plan({ visibility: "archived" }), "p").visibility).toBe("archived");
@@ -194,8 +202,9 @@ describe("plan → Whop variant", () => {
     expect(planToVariantPayload(plan({ name: "A very long plan name that keeps going" }), "p").title).toHaveLength(30);
   });
   it("puts the strike-through price on the charged side", () => {
-    expect(strikeThroughPrices(plan({ compare_at_price_cents: 9900 }))).toEqual({ strike_through_initial_price: 99, strike_through_renewal_price: null });
-    expect(strikeThroughPrices(plan({ plan_type: "recurring", compare_at_price_cents: 2900 }))).toEqual({ strike_through_initial_price: null, strike_through_renewal_price: 29 });
+    expect(strikeThroughPrices(plan({ compare_at_price_cents: 9900 }))).toEqual({ strike_through_initial_price: 99 });
+    expect(strikeThroughPrices(plan({ plan_type: "recurring", compare_at_price_cents: 2900 }))).toEqual({ strike_through_renewal_price: 29 });
+    expect(strikeThroughPrices(plan())).toEqual({ strike_through_initial_price: null });
   });
 });
 

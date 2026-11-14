@@ -1,4 +1,5 @@
 import "server-only";
+import { createHash } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { stripHtml } from "@/lib/sanitize";
 import { slugify } from "@/lib/format";
@@ -191,11 +192,12 @@ export async function syncPlanToWhop(planId: string): Promise<SyncResult> {
     } else {
       const created = await client.variants.create(
         { account_id: config.companyId, product_id: product.whop_product_id!, billing_type, ...updatable },
-        { idempotencyKey: `foremint-plan-${plan.id}-${billing_type}-${plan.updated_at}` },
+        // Keyed on the exact request, so a corrected payload is never answered with a cached failure.
+        { idempotencyKey: `foremint-plan-${plan.id}-${createHash("sha256").update(JSON.stringify(payload)).digest("hex").slice(0, 24)}` },
       );
       variantId = created.id;
       const strike = strikeThroughPrices(plan);
-      if (strike.strike_through_initial_price !== null || strike.strike_through_renewal_price !== null) {
+      if (Object.values(strike).some((v) => v !== null)) {
         await client.variants.update({ id: variantId, ...strike });
       }
     }

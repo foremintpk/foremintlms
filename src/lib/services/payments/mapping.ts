@@ -234,22 +234,40 @@ export function parseForemintMetadata(metadata: unknown): ForemintMetadata | nul
 
 export const WHOP_MIN_PAID_CENTS = 100;
 
-export interface VariantPayload {
-  billing_type: "one_time" | "renewal";
+interface VariantBase {
   currency: string;
-  initial_price: number;
-  renewal_price: number | null;
-  billing_period: number | null;
-  expiration_days: number | null;
-  trial_period_days: number | null;
   unlimited_stock: boolean;
-  stock: number | null;
+  /** Only sent when stock is limited. */
+  stock?: number;
   visibility: "hidden" | "archived";
   title: string;
   description: string | null;
   release_method: "buy_now";
   metadata: Record<string, string>;
 }
+
+/**
+ * Whop validates price fields as numbers even where they don't apply (it
+ * rejects `renewal_price: null` on one-time variants), so each billing type
+ * sends only its own fields, with 0 for "none".
+ */
+export type VariantPayload =
+  | (VariantBase & {
+      billing_type: "one_time";
+      initial_price: number;
+      renewal_price: 0;
+      /** Days of access; null = lifetime. */
+      expiration_days: number | null;
+    })
+  | (VariantBase & {
+      billing_type: "renewal";
+      /** Extra amount on the first charge only; the first period itself is billed at renewal_price. */
+      initial_price: 0;
+      renewal_price: number;
+      billing_period: number;
+      /** 0 = no free trial. */
+      trial_period_days: number;
+    });
 
 /**
  * Our plan → a Whop variant. Variants are kept hidden on Whop's storefront so
@@ -259,32 +277,41 @@ export interface VariantPayload {
 export function planToVariantPayload(plan: PlanRow, productId: string): VariantPayload {
   if (plan.plan_type === "free") throw new Error("Free plans are fulfilled by Foremint and are not synced to Whop.");
   if (plan.price_cents < WHOP_MIN_PAID_CENTS) throw new Error("Whop requires paid plans to cost at least 1.00.");
-  const recurring = plan.plan_type === "recurring";
   const remaining = plan.stock_limit === null ? null : Math.max(0, plan.stock_limit - plan.units_sold);
-  return {
-    billing_type: recurring ? "renewal" : "one_time",
+  const base: VariantBase = {
     currency: plan.currency,
-    initial_price: recurring ? 0 : centsToMajor(plan.price_cents),
-    renewal_price: recurring ? centsToMajor(plan.price_cents) : null,
-    billing_period: recurring ? plan.billing_period_days : null,
-    expiration_days: recurring ? null : plan.access_duration_days,
-    trial_period_days: recurring && plan.trial_days ? plan.trial_days : null,
     unlimited_stock: remaining === null,
-    stock: remaining,
+    ...(remaining === null ? {} : { stock: remaining }),
     visibility: plan.visibility === "archived" ? "archived" : "hidden",
     title: plan.name.slice(0, 30),
     description: plan.description ? plan.description.slice(0, 1000) : null,
     release_method: "buy_now",
     metadata: { foremint_plan_id: plan.id, foremint_product_id: productId },
   };
+  if (plan.plan_type === "recurring") {
+    if (!plan.billing_period_days) throw new Error("Subscriptions need a billing period.");
+    return {
+      ...base,
+      billing_type: "renewal",
+      initial_price: 0,
+      renewal_price: centsToMajor(plan.price_cents),
+      billing_period: plan.billing_period_days,
+      trial_period_days: plan.trial_days ?? 0,
+    };
+  }
+  return {
+    ...base,
+    billing_type: "one_time",
+    initial_price: centsToMajor(plan.price_cents),
+    renewal_price: 0,
+    expiration_days: plan.access_duration_days,
+  };
 }
 
-export function strikeThroughPrices(plan: PlanRow): { strike_through_initial_price: number | null; strike_through_renewal_price: number | null } {
-  if (plan.compare_at_price_cents === null) return { strike_through_initial_price: null, strike_through_renewal_price: null };
-  const value = centsToMajor(plan.compare_at_price_cents);
-  return plan.plan_type === "recurring"
-    ? { strike_through_initial_price: null, strike_through_renewal_price: value }
-    : { strike_through_initial_price: value, strike_through_renewal_price: null };
+/** The "was" price shown struck through on Whop's checkout; only the field that applies to the plan type. */
+export function strikeThroughPrices(plan: PlanRow): { strike_through_initial_price: number | null } | { strike_through_renewal_price: number | null } {
+  const value = plan.compare_at_price_cents === null ? null : centsToMajor(plan.compare_at_price_cents);
+  return plan.plan_type === "recurring" ? { strike_through_renewal_price: value } : { strike_through_initial_price: value };
 }
 
 export interface PromoCodePayload {
