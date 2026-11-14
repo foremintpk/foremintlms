@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useTrackedTransition } from "@/hooks/use-tracked-transition";
 import { Check, EyeOff, Eye, ShieldX, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -63,7 +63,7 @@ export function ReportDecisionButtons({ reportId, targetExists, targetType }: { 
 }
 
 export function ReviewDecisionButtons({ reviewId, status }: { reviewId: string; status: "pending" | "published" | "rejected" }) {
-  const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTrackedTransition();
   return (
     <div className="flex flex-wrap gap-2">
       {status !== "published" ? (
@@ -101,7 +101,7 @@ export function ReviewDecisionButtons({ reviewId, status }: { reviewId: string; 
 }
 
 export function DiscussionModerationButtons({ discussionId, status }: { discussionId: string; status: string }) {
-  const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTrackedTransition();
   const run = (action: "hide" | "unhide" | "remove") =>
     startTransition(async () => {
       if (action === "remove" && !window.confirm("Remove this discussion for everyone?")) return;

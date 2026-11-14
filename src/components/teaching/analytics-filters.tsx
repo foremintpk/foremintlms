@@ -1,7 +1,8 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useTransition } from "react";
+import { Suspense } from "react";
+import { useTrackedTransition } from "@/hooks/use-tracked-transition";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { RANGES } from "./analytics-ranges";
@@ -10,7 +11,7 @@ function Filters({ courses }: { courses: { id: string; title: string }[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
-  const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTrackedTransition({ progress: true });
 
   const update = (key: string, value: string | null) => {
     const next = new URLSearchParams(params.toString());

@@ -239,6 +239,68 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+  /* Loading indicators are essential motion: keep spinners turning, slowly. */
+  [data-slot="spinner"] {
+    animation-duration: 1.4s !important;
+    animation-iteration-count: infinite !important;
+  }
+}
+
+/* Loading placeholders: clearly visible on page and card backgrounds, with a
+   soft sweep so a loading page never looks blank or frozen. */
+@layer components {
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    background-color: color-mix(in oklch, var(--foreground) 9%, transparent);
+  }
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.65), transparent);
+    animation: skeleton-sweep 1.4s ease-in-out infinite;
+  }
+  .dark .skeleton::after {
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.07), transparent);
+  }
+}
+
+@keyframes skeleton-sweep {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Top-of-window navigation progress (components/common/navigation-progress). */
+.nav-progress {
+  position: fixed;
+  inset: 0 auto auto 0;
+  z-index: 100;
+  height: 3px;
+  width: 0;
+  opacity: 0;
+  pointer-events: none;
+  border-radius: 0 999px 999px 0;
+  background: linear-gradient(90deg, var(--primary), color-mix(in oklch, var(--primary) 55%, var(--mint)));
+  box-shadow: 0 0 12px color-mix(in oklch, var(--primary) 55%, transparent);
+}
+.nav-progress[data-state="loading"] {
+  width: 88%;
+  opacity: 1;
+  /* Fast start, long crawl: it never looks finished until it is. */
+  transition:
+    width 10s cubic-bezier(0.05, 0.85, 0.15, 1),
+    opacity 0.15s 0.06s;
+}
+.nav-progress[data-state="done"] {
+  width: 100%;
+  opacity: 0;
+  transition:
+    width 0.2s ease-out,
+    opacity 0.3s 0.15s;
 }
 
 /* Rich text produced by the editor (lessons, blog, legal pages). */

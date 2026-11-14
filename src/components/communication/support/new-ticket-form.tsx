@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState } from "react";
+import { useTrackedTransition } from "@/hooks/use-tracked-transition";
 import { Paperclip, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -32,7 +33,7 @@ export function NewTicketForm({
   const [courseId, setCourseId] = useState<string>(defaultCourseId ?? "none");
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
-  const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTrackedTransition();
 
   const submit = () =>
     startTransition(async () => {

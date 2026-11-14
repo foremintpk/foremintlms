@@ -1,14 +1,15 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useTransition } from "react";
+import { Suspense } from "react";
+import { useTrackedTransition } from "@/hooks/use-tracked-transition";
 import { Input } from "@/components/ui/input";
 
 function Inner() {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
-  const [, startTransition] = useTransition();
+  const [, startTransition] = useTrackedTransition({ progress: true });
   const set = (key: "from" | "to", value: string) => {
     const next = new URLSearchParams(params.toString());
     if (value) next.set(key, value);

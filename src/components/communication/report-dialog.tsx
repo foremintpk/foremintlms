@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
+import { useTrackedTransition } from "@/hooks/use-tracked-transition";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -34,7 +35,7 @@ export function ReportDialog({
 }) {
   const [reason, setReason] = useState<ReportReason>("spam");
   const [details, setDetails] = useState("");
-  const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTrackedTransition();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

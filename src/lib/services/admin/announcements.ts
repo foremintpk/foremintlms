@@ -28,6 +28,10 @@ export async function resolveAudience(audience: Audience, courseId: string | nul
     await page((f, t) => admin.from("profile_private").select("user_id").eq("status", "active").range(f, t), (r) => r.user_id as string);
   } else if (audience === "students") {
     await page((f, t) => admin.from("user_roles").select("user_id").eq("role", "student").range(f, t), (r) => r.user_id as string);
+    // Administrators hold the student role too, but they are staff, not learners.
+    const { data: admins, error: adminsError } = await admin.from("user_roles").select("user_id").eq("role", "admin");
+    if (adminsError) throw new Error(adminsError.message);
+    for (const a of admins ?? []) ids.delete(a.user_id);
   } else if (audience === "teachers") {
     await page((f, t) => admin.from("teacher_profiles").select("user_id").eq("status", "approved").range(f, t), (r) => r.user_id as string);
   } else if (audience === "course" && courseId) {

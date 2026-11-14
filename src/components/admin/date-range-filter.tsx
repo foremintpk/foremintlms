@@ -1,7 +1,8 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState, useTransition } from "react";
+import { Suspense, useState } from "react";
+import { useTrackedTransition } from "@/hooks/use-tracked-transition";
 import { CalendarRange } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +22,7 @@ function Inner() {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
-  const [pending, start] = useTransition();
+  const [pending, start] = useTrackedTransition({ progress: true });
   const current = params.get("range") ?? "30d";
   const [from, setFrom] = useState(params.get("from") ?? "");
   const [to, setTo] = useState(params.get("to") ?? "");

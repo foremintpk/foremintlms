@@ -10,7 +10,7 @@ import { LocalTime } from "@/components/common/local-time";
 import { StatCard } from "@/components/common/stat-card";
 import { DateRangeFilter } from "@/components/billing/date-range-filter";
 import { WhopStatusBanner } from "@/components/billing/whop-status-banner";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { requireAdmin } from "@/lib/auth/guards";
 import { buildQueryString, parseListParams } from "@/lib/list-params";
 import { listPayments } from "@/lib/services/billing/queries";

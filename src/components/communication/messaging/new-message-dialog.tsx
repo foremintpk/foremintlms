@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useTrackedTransition } from "@/hooks/use-tracked-transition";
 import { PenSquare, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -32,7 +33,7 @@ export function NewMessageDialog({ area }: { area: "learn" | "teach" | "admin" }
   const [results, setResults] = useState<ContactItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [starting, startTransition] = useTransition();
+  const [starting, startTransition] = useTrackedTransition();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requestId = useRef(0);
 

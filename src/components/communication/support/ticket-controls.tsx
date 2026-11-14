@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
+import { useTrackedTransition } from "@/hooks/use-tracked-transition";
 import { Lock, Paperclip, RotateCcw, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,7 @@ export function TicketReplyForm({ ticketId, isStaff, currentStatus }: { ticketId
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [showUpload, setShowUpload] = useState(false);
   const [nextStatus, setNextStatus] = useState<string>("auto");
-  const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTrackedTransition();
   const [uploadKey, setUploadKey] = useState(0);
 
   return (
@@ -132,7 +133,7 @@ export function StaffTicketControls({
   isAdmin: boolean;
   staff: { id: string; name: string; role: "admin" | "teacher" }[];
 }) {
-  const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTrackedTransition();
   const run = (fn: () => Promise<{ ok: true; message?: string } | { ok: false; error: string }>) =>
     startTransition(async () => {
       const res = await fn();
@@ -211,7 +212,7 @@ export function StaffTicketControls({
 }
 
 export function RequesterTicketControls({ ticketId, status, canReopen }: { ticketId: string; status: TicketStatus; canReopen: boolean }) {
-  const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTrackedTransition();
   const run = (action: "close" | "reopen") =>
     startTransition(async () => {
       const res = await requesterTicketAction({ ticketId, action });

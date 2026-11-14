@@ -1,12 +1,12 @@
 "use client";
 
-import { useTransition } from "react";
+import { useTrackedTransition } from "@/hooks/use-tracked-transition";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { signOut } from "@/lib/auth/actions";
 
 export function SignOutButton({ className, label = "Sign out" }: { className?: string; label?: string }) {
-  const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTrackedTransition();
   return (
     <Button type="button" variant="outline" className={className} disabled={pending} onClick={() => startTransition(() => signOut())}>
       <LogOut className="size-4" /> {pending ? "Signing out…" : label}

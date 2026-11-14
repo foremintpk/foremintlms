@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState } from "react";
+import { useTrackedTransition } from "@/hooks/use-tracked-transition";
 import {
   CheckCircle2,
   Ellipsis,
@@ -73,7 +74,7 @@ export function ReactionBar({
   disabled?: boolean;
 }) {
   const [state, setState] = useState({ counts, mine });
-  const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTrackedTransition();
 
   const toggle = (key: ReactionKey) => {
     const active = state.mine.includes(key);
@@ -150,7 +151,7 @@ export function DiscussionActions({
   const [title, setTitle] = useState(discussion.title);
   const [body, setBody] = useState(discussion.body);
   const [reporting, setReporting] = useState(false);
-  const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTrackedTransition();
 
   const staff = (action: "pin" | "unpin" | "lock" | "unlock" | "hide" | "unhide" | "remove" | "resolve" | "reopen") =>
     startTransition(async () => {
@@ -304,7 +305,7 @@ export function ReplyCard({
   const [editing, setEditing] = useState(false);
   const [body, setBody] = useState(reply.body);
   const [reporting, setReporting] = useState(false);
-  const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTrackedTransition();
   const mine = reply.author.id === meId;
   const canReply = !locked || isStaff;
 

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useState } from "react";
+import { useTrackedTransition } from "@/hooks/use-tracked-transition";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -31,7 +32,7 @@ export interface StaffTicketRow {
 export function StaffTicketTable({ rows, basePath, bulk }: { rows: StaffTicketRow[]; basePath: string; bulk: boolean }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState<TicketStatus>("resolved");
-  const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTrackedTransition();
   const allSelected = rows.length > 0 && rows.every((r) => selected.has(r.id));
 
   const toggle = (id: string) =>

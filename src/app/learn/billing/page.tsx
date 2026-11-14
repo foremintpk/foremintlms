@@ -7,7 +7,7 @@ import { StatusBadge } from "@/components/common/status-badge";
 import { LocalTime } from "@/components/common/local-time";
 import { DocumentLinks } from "@/components/billing/document-links";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { requireUser } from "@/lib/auth/guards";
 import { getLearnerBilling } from "@/lib/services/billing/queries";
 import { billingPeriodLabel, formatMoney } from "@/lib/format";

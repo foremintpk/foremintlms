@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense } from "react";
 import { Logo, LogoMark } from "@/components/brand/logo";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Sidebar,
   SidebarContent,
@@ -25,6 +26,12 @@ import type { ShellBadges } from "./types";
 function isActive(pathname: string, item: NavItem) {
   if (item.exact) return pathname === item.href;
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
+}
+
+/** The item's icon, swapped for a spinner while its page is loading. Must render inside <Link>. */
+function NavItemIcon({ icon: Icon }: { icon: NavItem["icon"] }) {
+  const { pending } = useLinkStatus();
+  return pending ? <Spinner aria-hidden className="text-primary" /> : <Icon />;
 }
 
 function NavMenu({ area, badges, pathname }: { area: ShellArea; badges: ShellBadges; pathname: string | null }) {
@@ -49,7 +56,7 @@ function NavMenu({ area, badges, pathname }: { area: ShellArea; badges: ShellBad
                           if (isMobile) setOpenMobile(false);
                         }}
                       >
-                        <item.icon />
+                        <NavItemIcon icon={item.icon} />
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>

@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/common/empty-state";
 import { ActionButton } from "@/components/billing/action-button";
 import { WhopStatusBanner } from "@/components/billing/whop-status-banner";
 import { WhopSyncBadge } from "@/components/billing/whop-sync-badge";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { requireAdmin } from "@/lib/auth/guards";
 import { getPricingOverview } from "@/lib/services/billing/queries";
 import { planPriceLabel } from "@/lib/domain/pricing";

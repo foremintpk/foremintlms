@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { useTrackedTransition } from "./use-tracked-transition";
 
 export type ClientActionResult<T> =
   | { ok: true; data: T; message?: string }
@@ -15,7 +16,8 @@ export function useAction<I, T>(
   action: (input: I) => Promise<ClientActionResult<T>>,
   opts: { successMessage?: string; onSuccess?: (data: T) => void; silent?: boolean } = {},
 ) {
-  const [pending, startTransition] = useTransition();
+  // The pressed Button shows a spinner while the action runs (see lib/client/activity).
+  const [pending, startTransition] = useTrackedTransition();
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [error, setError] = useState<string | null>(null);
 
@@ -48,7 +50,7 @@ export function useAction<I, T>(
           }
         });
       }),
-    [action, opts],
+    [action, opts, startTransition],
   );
 
   return { run, pending, error, fieldErrors, setFieldErrors };

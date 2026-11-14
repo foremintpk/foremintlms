@@ -7,7 +7,7 @@ import { StatusBadge } from "@/components/common/status-badge";
 import { CreateGroupProductDialog } from "@/components/billing/group-product-forms";
 import { WhopStatusBanner } from "@/components/billing/whop-status-banner";
 import { WhopSyncBadge } from "@/components/billing/whop-sync-badge";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { requireAdmin } from "@/lib/auth/guards";
 import { getPricingOverview, listAllCourses } from "@/lib/services/billing/queries";
 import { planPriceLabel } from "@/lib/domain/pricing";

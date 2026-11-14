@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useTrackedTransition } from "@/hooks/use-tracked-transition";
 import { BellOff, BellRing, ChevronLeft, Ellipsis, Flag, Paperclip, Pencil, RotateCcw, SendHorizontal, ShieldAlert, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -151,7 +152,7 @@ export function MessageThread({
   const [editing, setEditing] = useState<{ id: string; body: string } | null>(null);
   const [reporting, setReporting] = useState<string | null>(null);
   const [muted, setMuted] = useState(isMuted);
-  const [, startTransition] = useTransition();
+  const [, startTransition] = useTrackedTransition();
   const scroller = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
   const readTimer = useRef<ReturnType<typeof setTimeout> | null>(null);

@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState } from "react";
+import { useTrackedTransition } from "@/hooks/use-tracked-transition";
 import { MessageSquarePlus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,7 @@ export function NewDiscussionDialog({
   const [pinned, setPinned] = useState(false);
   const [mentions, setMentions] = useState<Mention[]>([]);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
-  const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTrackedTransition();
 
   const submit = () =>
     startTransition(async () => {
@@ -184,7 +185,7 @@ export function ReplyComposer({
 }) {
   const [body, setBody] = useState("");
   const [mentions, setMentions] = useState<Mention[]>([]);
-  const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTrackedTransition();
 
   return (
     <form
@@ -234,7 +235,7 @@ export function AskLessonQuestionForm({ courseId, lessonId }: { courseId: string
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [mentions, setMentions] = useState<Mention[]>([]);
-  const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTrackedTransition();
 
   if (!open) {
     return (

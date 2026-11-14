@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { CompositionEditor } from "@/components/billing/group-product-forms";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { requireAdmin } from "@/lib/auth/guards";
 import { getProductWithPlans, listAllCourses } from "@/lib/services/billing/queries";
 import { updateCompositionAction } from "../actions";

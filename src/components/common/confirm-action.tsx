@@ -12,6 +12,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Spinner } from "@/components/ui/spinner";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAction, type ClientActionResult } from "@/hooks/use-action";
@@ -83,7 +84,13 @@ export function ConfirmAction<T>({
               void run({ reason: reason.trim() || undefined });
             }}
           >
-            {pending ? "Working…" : confirmLabel}
+            {pending ? (
+              <>
+                <Spinner aria-hidden /> Working…
+              </>
+            ) : (
+              confirmLabel
+            )}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -19,6 +19,8 @@ export interface ReportDef {
   dateColumn: string | null;
   columns: CsvColumn<Row>[];
   query: (supabase: Supabase, range: { from: Date | null; to: Date | null }) => (from: number, to: number) => PromiseLike<{ data: unknown; error: { message: string } | null }>;
+  /** Drop rows that belong to administrator accounts (staff are not learners). Returns the row's user id. */
+  excludeAdminAccounts?: (row: Row) => string | undefined;
 }
 
 const one = (v: unknown): Row | null => (Array.isArray(v) ? ((v[0] as Row) ?? null) : ((v as Row) ?? null));
@@ -46,12 +48,13 @@ export const REPORTS: Record<string, ReportDef> = {
       { header: "Joined", value: (r) => r.created_at as string },
       { header: "Last sign-in", value: (r) => one(one(r.profiles)?.profile_private)?.last_sign_in_at as string },
     ],
+    excludeAdminAccounts: (r) => r.user_id as string,
     // The student role row is created at sign-up, so its timestamp is the join date.
     query: (s, range) => (f, t) =>
       withRange(
         s
           .from("user_roles")
-          .select("created_at, profiles!user_roles_user_id_fkey(id, full_name, timezone, profile_private(email, status, country, last_sign_in_at))")
+          .select("user_id, created_at, profiles!user_roles_user_id_fkey(id, full_name, timezone, profile_private(email, status, country, last_sign_in_at))")
           .eq("role", "student"),
         "created_at",
         range,
@@ -260,12 +263,19 @@ export const REPORTS: Record<string, ReportDef> = {
 export async function collectReportRows(report: ReportDef, range: { from: Date | null; to: Date | null }): Promise<{ rows: Row[]; truncated: boolean }> {
   const supabase = await createClient();
   const page = report.query(supabase, range);
+  const userIdOf = report.excludeAdminAccounts;
+  let adminIds: Set<string> | null = null;
+  if (userIdOf) {
+    const { data, error } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
+    if (error) throw new Error(`Export query failed: ${error.message}`);
+    adminIds = new Set((data ?? []).map((a) => a.user_id));
+  }
   const rows: Row[] = [];
   for (let from = 0; from < MAX_EXPORT_ROWS; from += PAGE) {
     const { data, error } = await page(from, from + PAGE - 1);
     if (error) throw new Error(`Export query failed: ${error.message}`);
     const batch = (data ?? []) as Row[];
-    rows.push(...batch);
+    rows.push(...(adminIds && userIdOf ? batch.filter((r) => !adminIds.has(userIdOf(r) ?? "")) : batch));
     if (batch.length < PAGE) return { rows, truncated: false };
   }
   return { rows, truncated: true };

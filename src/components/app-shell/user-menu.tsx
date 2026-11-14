@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import { useTransition } from "react";
+import { useTrackedTransition } from "@/hooks/use-tracked-transition";
 import { GraduationCap, LogOut, Monitor, Moon, Presentation, Settings, ShieldCheck, Sun } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -26,7 +26,7 @@ import type { ShellUser } from "./types";
 
 export function UserMenu({ user, area }: { user: ShellUser; area: ShellArea }) {
   const { theme, setTheme } = useTheme();
-  const [pending, startTransition] = useTransition();
+  const [pending, startTransition] = useTrackedTransition();
   const settingsHref = area === "admin" ? "/admin/account" : `/${area}/settings`;
 
   return (
