@@ -69,8 +69,8 @@ function makeStyles(fonts: "custom" | "fallback") {
     header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28 },
     brandRow: { flexDirection: "row", alignItems: "center" },
     logo: { width: 30, height: 30, marginRight: 9 },
-    wordmark: { fontFamily: display, fontSize: 17, color: INK, letterSpacing: -0.4 },
-    wordmarkSuffix: { fontFamily: sans, fontSize: 11, color: MUTED },
+    wordmark: { fontFamily: display, fontSize: 17, color: INK, letterSpacing: -0.4, lineHeight: 1 },
+    wordmarkSuffix: { ...bold, fontSize: 6.5, color: BRAND, letterSpacing: 2.6, marginTop: 2, lineHeight: 1 },
     titleBlock: { alignItems: "flex-end" },
     title: { fontFamily: display, fontSize: 20, color: INK, letterSpacing: -0.3, lineHeight: 1.15, marginBottom: 4 },
     number: { color: MUTED, lineHeight: 1.3 },
@@ -137,9 +137,10 @@ function ReceiptPdf({ s, logo, fonts }: { s: ReceiptSnapshot; logo: Buffer | nul
             {/* react-pdf images have no alt attribute; the wordmark beside it carries the name. */}
             {/* eslint-disable-next-line jsx-a11y/alt-text */}
             {logo ? <Image src={logo} style={st.logo} /> : null}
-            <Text style={st.wordmark}>
-              foremint <Text style={st.wordmarkSuffix}>academy</Text>
-            </Text>
+            <View>
+              <Text style={st.wordmark}>Foremint</Text>
+              <Text style={st.wordmarkSuffix}>ACADEMY</Text>
+            </View>
           </View>
           <View style={st.titleBlock}>
             <Text style={st.title}>{isCredit ? "Credit note" : "Receipt"}</Text>

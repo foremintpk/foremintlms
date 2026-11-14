@@ -1,13 +1,58 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Foremint Academy">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-3 22 430 430" role="img" aria-label="Foremint Academy">
   <defs>
-    <linearGradient id="fm-tile" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#6A4DFF"/>
-      <stop offset="1" stop-color="#4A2BDB"/>
+    <!-- Upper ribbon: pink-violet face folding into a blue stem -->
+    <linearGradient id="fm-a-face" x1="31" y1="200" x2="292" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#E58BFF"/>
+      <stop offset="0.45" stop-color="#9B5CFF"/>
+      <stop offset="1" stop-color="#3D2BFF"/>
     </linearGradient>
+    <linearGradient id="fm-a-stem" x1="118" y1="240" x2="31" y2="390" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1C10C9"/>
+      <stop offset="0.55" stop-color="#3A1EF0"/>
+      <stop offset="1" stop-color="#C26BFF"/>
+    </linearGradient>
+    <!-- Lower ribbon: blue face warming to pink at the curl -->
+    <linearGradient id="fm-b-face" x1="152" y1="280" x2="392" y2="210" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2424FF"/>
+      <stop offset="0.55" stop-color="#7E5BFF"/>
+      <stop offset="1" stop-color="#EBA8FF"/>
+    </linearGradient>
+    <linearGradient id="fm-b-stem" x1="152" y1="330" x2="390" y2="300" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1414E6"/>
+      <stop offset="0.6" stop-color="#2A1BF2"/>
+      <stop offset="1" stop-color="#5A2BFF"/>
+    </linearGradient>
+    <linearGradient id="fm-cap" x1="69" y1="40" x2="371" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#140E8C"/>
+      <stop offset="1" stop-color="#0B0870"/>
+    </linearGradient>
+
+    <path id="fm-a" d="M31 380 L31 215 C31 178 50 152 84 134 L150 100 C164 93 178 92 192 97 L287 132 C294 135 294 140 287 143 L136 218 C125 224 118 233 118 246 L118 340 C118 350 113 356 105 360 L41 391 C35 394 31 390 31 384 Z"/>
+    <path id="fm-b" d="M152 272 C152 262 157 255 166 251 L280 193 C289 188 297 187 305 190 L378 219 C389 224 394 232 391 245 L384 280 C382 290 376 297 368 301 L312 326 C304 330 297 330 290 326 L263 310 C255 305 248 306 243 311 C238 316 236 322 236 330 L236 400 C236 410 232 416 224 420 L163 446 C157 449 152 446 152 440 Z"/>
+
+    <clipPath id="fm-a-clip"><use href="#fm-a"/></clipPath>
+    <clipPath id="fm-b-clip"><use href="#fm-b"/></clipPath>
+    <!-- The cap sits behind the ribbon with a clean gap around it -->
+    <mask id="fm-cap-mask" maskUnits="userSpaceOnUse" x="-3" y="22" width="430" height="430">
+      <rect x="-3" y="22" width="430" height="430" fill="#fff"/>
+      <use href="#fm-a" fill="#000" stroke="#000" stroke-width="18" stroke-linejoin="round"/>
+    </mask>
   </defs>
-  <rect width="64" height="64" rx="16" fill="url(#fm-tile)"/>
-  <rect x="16" y="13" width="10" height="38" rx="5" fill="#FFFFFF"/>
-  <rect x="16" y="13" width="31" height="10" rx="5" fill="#FFFFFF"/>
-  <path d="M24.5 42.5C26 31.5 35 26.5 48 27.5C47 39 37.5 44.5 24.5 42.5Z" fill="#3DDC97"/>
-  <path d="M27.5 40.2C33 36.2 38.5 32.6 44.5 30.2" stroke="#2BB07A" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+
+  <g mask="url(#fm-cap-mask)">
+    <path d="M74 92 L198 34 C203 31 209 31 214 33 L362 72 C371 75 372 80 364 84 L279 114 C273 116 267 117 261 116 L76 101 C68 100 67 95 74 92 Z" fill="url(#fm-cap)"/>
+  </g>
+  <path d="M342 80 L348 80 L348 120 L342 120 Z" fill="#0B0870"/>
+  <circle cx="345" cy="126" r="8" fill="#0B0870"/>
+  <path d="M340 132 L350 132 L359 168 C360 172 358 174 354 174 L336 174 C332 174 330 172 331 168 Z" fill="#0B0870"/>
+
+  <use href="#fm-a" fill="url(#fm-a-face)"/>
+  <g clip-path="url(#fm-a-clip)">
+    <path d="M0 312 L138 196 L140 470 L0 470 Z" fill="url(#fm-a-stem)"/>
+  </g>
+
+  <use href="#fm-b" fill="url(#fm-b-face)"/>
+  <g clip-path="url(#fm-b-clip)">
+    <path d="M140 326 L400 202 L420 470 L140 470 Z" fill="url(#fm-b-stem)"/>
+  </g>
 </svg>

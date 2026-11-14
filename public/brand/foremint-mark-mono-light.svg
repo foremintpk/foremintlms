@@ -1,5 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Foremint Academy">
-  <rect x="16" y="13" width="10" height="38" rx="5" fill="#FFFFFF"/>
-  <rect x="16" y="13" width="31" height="10" rx="5" fill="#FFFFFF"/>
-  <path d="M24.5 42.5C26 31.5 35 26.5 48 27.5C47 39 37.5 44.5 24.5 42.5Z" fill="#3DDC97"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-3 22 430 430" role="img" aria-label="Foremint Academy">
+  <!-- Single-colour mark for dark or photographic backgrounds. Same geometry as foremint-mark.svg. -->
+  <defs>
+    <path id="fmm-a" d="M31 380 L31 215 C31 178 50 152 84 134 L150 100 C164 93 178 92 192 97 L287 132 C294 135 294 140 287 143 L136 218 C125 224 118 233 118 246 L118 340 C118 350 113 356 105 360 L41 391 C35 394 31 390 31 384 Z"/>
+    <path id="fmm-b" d="M152 272 C152 262 157 255 166 251 L280 193 C289 188 297 187 305 190 L378 219 C389 224 394 232 391 245 L384 280 C382 290 376 297 368 301 L312 326 C304 330 297 330 290 326 L263 310 C255 305 248 306 243 311 C238 316 236 322 236 330 L236 400 C236 410 232 416 224 420 L163 446 C157 449 152 446 152 440 Z"/>
+    <clipPath id="fmm-a-clip"><use href="#fmm-a"/></clipPath>
+    <clipPath id="fmm-b-clip"><use href="#fmm-b"/></clipPath>
+    <mask id="fmm-cap-mask" maskUnits="userSpaceOnUse" x="-3" y="22" width="430" height="430">
+      <rect x="-3" y="22" width="430" height="430" fill="#fff"/>
+      <use href="#fmm-a" fill="#000" stroke="#000" stroke-width="18" stroke-linejoin="round"/>
+    </mask>
+  </defs>
+  <g fill="#FFFFFF">
+    <g mask="url(#fmm-cap-mask)">
+      <path d="M74 92 L198 34 C203 31 209 31 214 33 L362 72 C371 75 372 80 364 84 L279 114 C273 116 267 117 261 116 L76 101 C68 100 67 95 74 92 Z"/>
+    </g>
+    <path d="M342 80 L348 80 L348 120 L342 120 Z"/>
+    <circle cx="345" cy="126" r="8"/>
+    <path d="M340 132 L350 132 L359 168 C360 172 358 174 354 174 L336 174 C332 174 330 172 331 168 Z"/>
+    <use href="#fmm-a"/>
+    <use href="#fmm-b"/>
+  </g>
+  <g fill="#000000" fill-opacity="0.18">
+    <g clip-path="url(#fmm-a-clip)"><path d="M0 312 L138 196 L140 470 L0 470 Z"/></g>
+    <g clip-path="url(#fmm-b-clip)"><path d="M140 326 L400 202 L420 470 L140 470 Z"/></g>
+  </g>
 </svg>

@@ -100,7 +100,7 @@ export async function renderCertificatePdf(input: CertificatePdfInput): Promise<
     header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
     brand: { flexDirection: "row", alignItems: "center" },
     brandText: { fontFamily: display, fontWeight: 800, fontSize: 18, letterSpacing: -0.4, marginLeft: 10 },
-    brandSub: { fontFamily: sans, fontSize: 12, color: MUTED, marginLeft: 4 },
+    brandSub: { fontFamily: sans, fontSize: 7, color: VIOLET, letterSpacing: 2.8, marginLeft: 10, marginTop: 2 },
     number: { fontSize: 9, color: MUTED },
     label: { fontSize: 11, color: MUTED, marginTop: 46 },
     title: { fontFamily: display, fontWeight: 800, fontSize: 40, letterSpacing: -1, marginTop: 6 },
@@ -133,8 +133,10 @@ export async function renderCertificatePdf(input: CertificatePdfInput): Promise<
           <View style={s.header}>
             <View style={s.brand}>
               {mark ? <Image src={mark} style={{ width: 34, height: 34 }} /> : null}
-              <Text style={s.brandText}>foremint</Text>
-              <Text style={s.brandSub}>academy</Text>
+              <View>
+                <Text style={s.brandText}>Foremint</Text>
+                <Text style={s.brandSub}>ACADEMY</Text>
+              </View>
             </View>
             <Text style={s.number}>Certificate no. {input.certificateNumber}</Text>
           </View>
