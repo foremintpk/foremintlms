@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BarChart2, Check, ChevronUp, Clock, Loader2, PlayCircle, Plus, Search, SlidersHorizontal, X } from "lucide-react";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
@@ -27,12 +27,16 @@ export function CourseSelector({ catalog }: { catalog: SelectorCatalog }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   // The chosen period applies instantly (prices come from the catalogue); the cart syncs in the background.
   const [pickedDuration, setPickedDuration] = useState<string | null>(null);
+  const latestPick = useRef<string | null>(null);
   const duration = pickedDuration ?? cart.cart?.duration ?? catalog.defaultDuration;
   const pickDuration = (key: string) => {
     if (key === duration) return;
     setPickedDuration(key);
-    // Once the server answers, its period wins (the same one on success; the previous one on failure).
-    void cart.setDuration(key).finally(() => setPickedDuration(null));
+    latestPick.current = key;
+    // When the reply to the latest pick arrives, the server's period takes over (the same one on success).
+    void cart.setDuration(key).finally(() => {
+      if (latestPick.current === key) setPickedDuration(null);
+    });
   };
   const selectedCount = cart.cart?.courseIds.length ?? 0;
   const limitReached = catalog.maxCourses !== null && selectedCount >= catalog.maxCourses;

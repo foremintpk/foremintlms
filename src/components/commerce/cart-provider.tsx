@@ -61,7 +61,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const apply = useCallback((result: CartResult, seq: number) => {
     if (result.cart && seq >= latest.current) {
       latest.current = seq;
-      setCart(result.cart);
+      const next = result.cart;
+      // Cart writes don't look up the session; keep the account email from the first load.
+      setCart((prev) => (next.accountEmail || !prev?.accountEmail ? next : { ...next, accountEmail: prev.accountEmail }));
     }
   }, []);
 
