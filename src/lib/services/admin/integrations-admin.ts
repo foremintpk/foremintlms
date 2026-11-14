@@ -39,7 +39,14 @@ export const PROVIDERS: ProviderMeta[] = [
     fields: [
       { key: "apiKey", label: "API key", secret: true, envVar: "WHOP_API_KEY", placeholder: "Company API key" },
       { key: "companyId", label: "Company ID", secret: false, envVar: "WHOP_COMPANY_ID", placeholder: "biz_…" },
-      { key: "webhookSecret", label: "Webhook signing secret", secret: true, envVar: "WHOP_WEBHOOK_SECRET" },
+      {
+        key: "webhookSecret",
+        label: "Webhook signing secret",
+        secret: true,
+        envVar: "WHOP_WEBHOOK_SECRET",
+        placeholder: "ws_…",
+        help: "Whop → Developer → Webhooks → your endpoint: the signing secret starting with ws_ (not a delivery ID like whdel_…).",
+      },
       {
         key: "environment",
         label: "Environment",

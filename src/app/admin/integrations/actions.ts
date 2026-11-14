@@ -4,7 +4,7 @@ import { updateTag } from "next/cache";
 import { after } from "next/server";
 import { z } from "zod";
 import { assertAdmin } from "@/lib/auth/guards";
-import { ok, runAction, type ActionResult } from "@/lib/actions";
+import { ok, runAction, UserFacingError, type ActionResult } from "@/lib/actions";
 import { audit } from "@/lib/audit";
 import { INTEGRATIONS_TAG, type IntegrationProvider } from "@/lib/services/integrations";
 import { PROVIDERS, recordTestResult, saveProviderValues } from "@/lib/services/admin/integrations-admin";
@@ -26,6 +26,11 @@ export async function saveIntegration(input: z.input<typeof saveSchema>): Promis
   return runAction(async () => {
     const user = await assertAdmin();
     const data = saveSchema.parse(input);
+    const whopSecret = data.provider === "whop" ? data.values.webhookSecret?.trim() : undefined;
+    if (whopSecret && !whopSecret.startsWith("ws_")) {
+      // A delivery ID (whdel_…) or API key here makes every webhook fail its signature check.
+      throw new UserFacingError("That isn't a Whop webhook signing secret. In Whop → Developer → Webhooks, open your endpoint and copy the secret that starts with ws_.");
+    }
     const { changedKeys } = await saveProviderValues(data.provider, data.values, data.clear, user.id);
     // Names of changed fields only — never values.
     await audit({ actor: user, action: "integration.updated", entityType: "integration", entityId: data.provider, metadata: { changedKeys, cleared: data.clear } });
