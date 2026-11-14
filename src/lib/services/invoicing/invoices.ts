@@ -284,7 +284,9 @@ async function generatePaymentLink(actor: SessionUser | null, inv: CustomInvoice
   };
   let outcome: Awaited<ReturnType<typeof createPaymentLink>>;
   try {
-    outcome = await createPaymentLink(inv, existing, { courseCount, redirectUrl: appUrl(`/payment/complete?ref=${inv.id}`), save });
+    // Whop accepts only https:// return URLs; on a local http:// site it shows its own confirmation page instead.
+    const returnUrl = appUrl(`/payment/complete?ref=${inv.id}`);
+    outcome = await createPaymentLink(inv, existing, { courseCount, redirectUrl: returnUrl.startsWith("https://") ? returnUrl : null, save });
   } catch (err) {
     const message = err instanceof IntegrationNotConfiguredError ? err.message : describeInvoiceError(err);
     await admin.from("custom_invoices").update({ generation_locked_at: null, generation_error: message, generation_attempts: inv.generation_attempts + 1 }).eq("id", inv.id);

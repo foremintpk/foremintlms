@@ -65,7 +65,8 @@ export default async function globalSetup() {
     .from("courses")
     .insert([
       { slug: courseSlug, title: `E2E Course ${run}`, short_description: "E2E course", status: "published", visibility: "public", category_id: category!.id, is_free: true },
-      { slug: otherCourseSlug, title: `E2E Other Course ${run}`, short_description: "Other teacher's course", status: "published", visibility: "public", category_id: category!.id },
+      // Bulk inserts send null for keys a row omits, so every row lists the same columns.
+      { slug: otherCourseSlug, title: `E2E Other Course ${run}`, short_description: "Other teacher's course", status: "published", visibility: "public", category_id: category!.id, is_free: false },
     ])
     .select("id, slug");
   if (courseError || !courses) throw new Error(`courses: ${courseError?.message}`);

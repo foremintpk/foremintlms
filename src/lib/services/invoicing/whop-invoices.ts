@@ -202,7 +202,8 @@ export interface PaymentLinkOutcome {
 export async function createPaymentLink(
   inv: CustomInvoiceRow,
   existing: WhopInvoiceMappingRow | null,
-  opts: { courseCount: number; redirectUrl: string; save: (fields: Partial<WhopInvoiceMappingRow>) => Promise<void> },
+  /** Where Whop sends the client after paying. Whop only accepts https:// URLs, so pass null otherwise. */
+  opts: { courseCount: number; redirectUrl: string | null; save: (fields: Partial<WhopInvoiceMappingRow>) => Promise<void> },
 ): Promise<PaymentLinkOutcome> {
   const { client, config } = await getWhopClient();
   const base = { environment: config.environment, whop_account_id: config.companyId };
@@ -264,7 +265,7 @@ export async function createPaymentLink(
     }
     if (!configId || !paymentUrl) {
       const cfg = await client.checkoutConfigurations.create(
-        { account_id: config.companyId, variant_id: variantId, metadata: meta, redirect_url: opts.redirectUrl },
+        { account_id: config.companyId, variant_id: variantId, metadata: meta, ...(opts.redirectUrl ? { redirect_url: opts.redirectUrl } : {}) },
         { idempotencyKey: `foremint-link-checkout-${inv.id}` },
       );
       configId = cfg.id;

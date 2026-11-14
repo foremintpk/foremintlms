@@ -15,17 +15,20 @@ async function signIn(page: Page, email: string, password: string) {
   await page.getByLabel(/email/i).fill(email);
   await page.getByLabel(/^password/i).fill(password);
   await page.getByRole("button", { name: /log in|sign in/i }).click();
+  await page.waitForURL((u) => !u.pathname.startsWith("/login"), { timeout: 30_000 });
 }
 
 async function signInAdmin(page: Page) {
   const { admin } = readState();
   await signIn(page, admin.email, admin.password);
-  await page.waitForURL(/\/(mfa|admin)/);
-  if (page.url().includes("/mfa")) {
+  for (let attempt = 0; attempt < 2 && new URL(page.url()).pathname.startsWith("/mfa"); attempt++) {
+    // The code field submits itself once six digits are entered. A code used
+    // moments earlier by another test may be refused, so retry with the next one.
+    if (attempt > 0) await page.waitForTimeout(30_000 - (Date.now() % 30_000) + 500);
     await page.getByLabel(/6-digit code/i).fill(totpCode(admin.totpSecret));
-    await page.getByRole("button", { name: /verify and continue/i }).click();
+    await page.waitForURL((u) => u.pathname.startsWith("/admin"), { timeout: 15_000 }).catch(() => undefined);
   }
-  await page.waitForURL(/\/admin/);
+  await expect(page).toHaveURL(/\/admin/);
 }
 
 test.describe("custom invoicing: boundaries", () => {
@@ -92,16 +95,19 @@ test.describe("custom invoicing: admin builder", () => {
       await generate.click();
       await page.waitForURL(/\/admin\/billing\/invoices\/[0-9a-f-]{36}$/);
       created.push(page.url().split("/").pop()!);
+      // Whop is connected, so this must be the real link Whop returned (default method: direct payment link).
       const url = page.getByTestId("payment-url");
-      // Sandbox account → the official link Whop returned; otherwise the Whop error is shown with a retry.
-      if (await url.isVisible()) {
-        await expect(url).toHaveValue(/^https:\/\/(sandbox\.)?whop\.com\/checkout\//);
-        await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
-        await page.getByTestId("copy-payment-link").first().click();
-        expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(await url.inputValue());
-      } else {
-        await expect(page.getByTestId("retry-generation")).toBeVisible();
-      }
+      await expect(url).toHaveValue(/^https:\/\/(sandbox\.)?whop\.com\/checkout\/ch_[A-Za-z0-9]+\/?$/);
+      await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+      await page.getByTestId("copy-payment-link").first().click();
+      expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(await url.inputValue());
+
+      // Void it: the link is closed on Whop and disappears here.
+      await page.getByTestId("void-invoice").click();
+      await page.getByLabel(/reason/i).fill("E2E clean-up");
+      await page.getByRole("button", { name: /^void invoice$/i }).last().click();
+      await expect(page.getByText("Voided").first()).toBeVisible({ timeout: 30_000 });
+      await expect(page.getByTestId("payment-url")).toHaveCount(0);
     } else {
       await page.getByRole("button", { name: /save as draft/i }).click();
       await page.waitForURL(/\/admin\/billing\/invoices\/[0-9a-f-]{36}$/);
