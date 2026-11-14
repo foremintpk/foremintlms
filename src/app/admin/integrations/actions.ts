@@ -1,13 +1,15 @@
 "use server";
 
 import { updateTag } from "next/cache";
+import { after } from "next/server";
 import { z } from "zod";
 import { assertAdmin } from "@/lib/auth/guards";
 import { ok, runAction, type ActionResult } from "@/lib/actions";
 import { audit } from "@/lib/audit";
 import { INTEGRATIONS_TAG, type IntegrationProvider } from "@/lib/services/integrations";
 import { PROVIDERS, recordTestResult, saveProviderValues } from "@/lib/services/admin/integrations-admin";
-import { testWhopConnection } from "@/lib/services/payments/whop";
+import { isWhopReady, testWhopConnection } from "@/lib/services/payments/whop";
+import { syncPendingProducts } from "@/lib/services/payments/catalog";
 import { testResendConnection } from "@/lib/services/email/resend";
 import { testVideoProvider } from "@/lib/services/video";
 import { testMeetingProvider } from "@/lib/services/live/providers";
@@ -28,6 +30,19 @@ export async function saveIntegration(input: z.input<typeof saveSchema>): Promis
     // Names of changed fields only — never values.
     await audit({ actor: user, action: "integration.updated", entityType: "integration", entityId: data.provider, metadata: { changedKeys, cleared: data.clear } });
     updateTag(INTEGRATIONS_TAG);
+    if (data.provider === "whop") {
+      // Push every product and plan Whop doesn't have yet, so checkout works
+      // as soon as payments are connected. Runs after the response is sent.
+      after(async () => {
+        try {
+          if (!(await isWhopReady())) return;
+          const result = await syncPendingProducts();
+          if (result.failed > 0) console.error("[whop] catalogue sync after connecting:", result.messages.join(" | "));
+        } catch (err) {
+          console.error("[whop] catalogue sync after connecting failed", err);
+        }
+      });
+    }
     return ok(null, "Integration settings saved");
   });
 }

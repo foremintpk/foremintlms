@@ -235,6 +235,39 @@ export async function syncProductAndPlans(productId: string): Promise<{ synced: 
   return { synced, failed, messages };
 }
 
+/**
+ * Push everything Whop doesn't have yet: products never synced, paid plans
+ * without a Whop ID, and anything whose last sync failed. Runs when Whop is
+ * connected and from the daily payments job, a few products at a time.
+ */
+export async function syncPendingProducts(): Promise<{ products: number; synced: number; failed: number; messages: string[] }> {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("products")
+    .select("id, name, whop_product_id, whop_sync_error, pricing_plans(plan_type, visibility, whop_plan_id, whop_sync_error)")
+    .eq("status", "active")
+    .order("sort_order");
+  if (error) throw new Error(`products lookup failed: ${error.message}`);
+  const pending = (data ?? []).filter(
+    (p) =>
+      !p.whop_product_id ||
+      p.whop_sync_error ||
+      (p.pricing_plans ?? []).some((pl) => pl.plan_type !== "free" && pl.visibility !== "archived" && (!pl.whop_plan_id || pl.whop_sync_error)),
+  );
+  const totals = { products: pending.length, synced: 0, failed: 0, messages: [] as string[] };
+  const queue = [...pending];
+  const worker = async () => {
+    for (let p = queue.shift(); p; p = queue.shift()) {
+      const r = await syncProductAndPlans(p.id);
+      totals.synced += r.synced;
+      totals.failed += r.failed;
+      totals.messages.push(...r.messages.map((m) => `${p.name} — ${m}`));
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(4, pending.length) }, worker));
+  return totals;
+}
+
 export async function syncCouponToWhop(couponId: string): Promise<SyncResult> {
   const admin = createAdminClient();
   const { data } = await admin.from("coupons").select("*").eq("id", couponId).single();

@@ -7,7 +7,7 @@ import { fail, ok, runAction, UserFacingError, type ActionResult } from "@/lib/a
 import { audit } from "@/lib/audit";
 import { pricingPlanSchema } from "@/lib/domain/pricing";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { ensureCourseProduct, syncPlanToWhop, syncProductAndPlans } from "@/lib/services/payments/catalog";
+import { ensureCourseProduct, syncPlanToWhop, syncProductAndPlans, syncProductToWhop } from "@/lib/services/payments/catalog";
 import { isWhopReady } from "@/lib/services/payments/whop";
 import { WHOP_MIN_PAID_CENTS } from "@/lib/services/payments/mapping";
 import type { PlanRow } from "@/lib/services/payments/types";
@@ -43,11 +43,15 @@ export async function updateProductAction(input: z.input<typeof productSchema>):
   return runAction(async () => {
     const actor = await assertAdmin();
     const data = productSchema.parse(input);
-    const { error } = await createAdminClient()
+    const { data: saved, error } = await createAdminClient()
       .from("products")
       .update({ name: data.name, description: data.description || null, status: data.status, is_featured: data.is_featured })
-      .eq("id", data.productId);
+      .eq("id", data.productId)
+      .select("whop_product_id")
+      .single();
     if (error) throw new Error(error.message);
+    // Keep the Whop listing's title and description in step.
+    if (saved?.whop_product_id && (await isWhopReady())) await syncProductToWhop(data.productId);
     await audit({ actor, action: "product.update", entityType: "product", entityId: data.productId, summary: `Updated product ${data.name}`, metadata: { status: data.status } });
     refresh(data.productId);
     return ok(null, "Product saved");
@@ -116,7 +120,8 @@ export async function updatePlanAction(planIdArg: string, input: { plan: unknown
       metadata: { before: { price_cents: prev.price_cents, visibility: prev.visibility, plan_type: prev.plan_type }, after: { ...plan } },
     });
     let message = "Plan saved";
-    if (plan.plan_type !== "free" && prev.whop_plan_id && (await isWhopReady())) {
+    // Sync every paid plan on save, including ones created before Whop was connected.
+    if (plan.plan_type !== "free" && (await isWhopReady())) {
       const sync = await syncPlanToWhop(planId);
       message = sync.ok ? "Plan saved and synced to Whop" : `Plan saved, but Whop sync failed: ${sync.message}`;
     }
@@ -134,7 +139,7 @@ export async function setPlanVisibilityAction(input: { planId: string; visibilit
     const { data } = await admin.from("pricing_plans").update({ visibility }).eq("id", planId).select("product_id, name, whop_plan_id, plan_type").single();
     if (!data) throw new UserFacingError("Plan not found.");
     await audit({ actor, action: "plan.visibility", entityType: "pricing_plan", entityId: planId, summary: `${data.name} → ${visibility}` });
-    if (data.whop_plan_id && data.plan_type !== "free" && (await isWhopReady())) await syncPlanToWhop(planId);
+    if (data.plan_type !== "free" && (data.whop_plan_id || visibility !== "archived") && (await isWhopReady())) await syncPlanToWhop(planId);
     refresh(data.product_id as string);
     return ok(null, visibility === "archived" ? "Plan archived" : visibility === "hidden" ? "Plan hidden" : "Plan published");
   });

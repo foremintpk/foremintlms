@@ -6,6 +6,8 @@ import { processEmailOutbox } from "@/lib/services/email/worker";
 import { sendLiveSessionReminders, syncLiveSessionArtifacts } from "@/lib/services/live/reminders";
 import { sendAssignmentDeadlineReminders } from "@/lib/services/assignments/reminders";
 import { reconcileWhopPayments, retryFailedWebhookEvents } from "@/lib/services/payments/reconcile";
+import { syncPendingProducts } from "@/lib/services/payments/catalog";
+import { isWhopReady } from "@/lib/services/payments/whop";
 import { publishScheduledContent } from "@/lib/services/courses/scheduled";
 import { issuePendingCertificates } from "@/lib/services/certificates";
 import { syncProcessingVideos } from "@/lib/services/video/sync";
@@ -37,7 +39,12 @@ const JOBS: Record<string, () => Promise<unknown>> = {
   "certificates": () => issuePendingCertificates(),
   // daily
   "access-expiry-reminders": async () => remindExpiringEntitlements(await getSetting<number>("learning.access_expiry_reminder_days", 7)),
-  "payment-reconciliation": () => reconcileWhopPayments({ trigger: "scheduled" }),
+  "payment-reconciliation": async () => {
+    // Catch-up: anything still missing from Whop (or whose sync failed) is pushed first.
+    const catalogue = (await isWhopReady()) ? await syncPendingProducts() : null;
+    const payments = await reconcileWhopPayments({ trigger: "scheduled" });
+    return { catalogue, payments };
+  },
 };
 
 function authorized(req: Request): boolean {

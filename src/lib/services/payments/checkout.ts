@@ -7,7 +7,7 @@ import { grantAccess } from "@/lib/services/entitlements";
 import type { SessionUser } from "@/lib/auth/session";
 import type { Json } from "@/types/database";
 import { describeWhopError, getWhopClient, isWhopReady } from "./whop";
-import { productCourseIds } from "./catalog";
+import { productCourseIds, syncPlanToWhop } from "./catalog";
 import type { PlanRow, ProductRow } from "./types";
 
 export type CheckoutUnavailableReason =
@@ -112,7 +112,19 @@ export async function startCheckout(user: SessionUser, planId: string): Promise<
   }
 
   if (!(await isWhopReady())) return { kind: "unavailable", reason: "payments_unavailable" };
-  if (!plan.whop_plan_id) return { kind: "unavailable", reason: "not_synced" };
+  // A plan nobody has synced yet is created in Whop on its first checkout
+  // (idempotent), so publishing a price is enough to start selling.
+  let whopPlanId = plan.whop_plan_id;
+  if (!whopPlanId) {
+    const synced = await syncPlanToWhop(plan.id);
+    if (!synced.ok) {
+      console.error("[checkout] on-demand Whop sync failed", synced.message);
+      return { kind: "unavailable", reason: "not_synced" };
+    }
+    const { data: refreshed } = await admin.from("pricing_plans").select("whop_plan_id").eq("id", plan.id).single();
+    whopPlanId = refreshed?.whop_plan_id ?? null;
+    if (!whopPlanId) return { kind: "unavailable", reason: "not_synced" };
+  }
 
   const { data: session, error } = await admin
     .from("checkout_sessions")
@@ -132,7 +144,7 @@ export async function startCheckout(user: SessionUser, planId: string): Promise<
     const configuration = await client.checkoutConfigurations.create(
       {
         account_id: config.companyId,
-        variant_id: plan.whop_plan_id,
+        variant_id: whopPlanId,
         metadata: {
           foremint_user_id: user.id,
           checkout_session_id: session.id,
