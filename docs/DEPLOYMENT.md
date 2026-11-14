@@ -26,7 +26,8 @@ This guide takes Foremint Academy from an empty Supabase project to a live Verce
 6. **Auth → Providers → Google** (optional): enable it with the Google OAuth client and turn on *Allow Google login* in Admin → Settings.
 7. **Storage**: buckets are created by the migrations (`public-media`, `avatars`, `course-content`, `submissions`, `attachments`, `documents`). On the Free plan the global upload limit is 50 MB — raise it under Storage settings on paid plans if you allow larger course files.
 8. **API keys**: copy the project URL, the publishable key and the secret key into the environment (below).
-9. **First administrator**: `npm run admin:bootstrap -- --email you@example.com --name "Your Name"`, then sign in and enrol an authenticator app at `/mfa`.
+9. **Starter content** (optional): run each file in `supabase/seed/courses/` and then `supabase/seed/pricing.sql` in the SQL editor. Each course file publishes one course with its modules, lessons, quiz and assignment, and skips itself if the course already has modules; `pricing.sql` creates the course plans, the seller bundle and the membership. Afterwards, sync the products to Whop from Admin → Products.
+10. **First administrator**: `npm run admin:bootstrap -- --email you@example.com --name "Your Name"`, then sign in and enrol an authenticator app at `/mfa`.
 
 ## 2. Environment variables
 

@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { PlayCircle, Radio } from "lucide-react";
+import { PlayCircle, Radio, Rocket, Sprout, TrendingUp, type LucideIcon } from "lucide-react";
 import type { SectionContent } from "@/lib/cms/sections";
+import { cn } from "@/lib/utils";
 import { Container, ctaClass } from "../primitives";
 
 /** Split the headline into its sentences so each can step forward. */
@@ -10,7 +11,31 @@ function headlineLines(headline: string): string[] {
   return parts.length ? parts : [headline];
 }
 
-const STEP_INDENT = ["", "sm:pl-[0.55em]", "sm:pl-[1.1em]", "sm:pl-[1.65em]"];
+/**
+ * Each line after the first steps forward. The step is filled by an icon
+ * tile, joined to the previous step by a dotted connector, so the stagger
+ * reads as a path forward instead of empty space.
+ */
+const STEP_ICONS: { icon: LucideIcon; tile: string }[] = [
+  { icon: Sprout, tile: "bg-mint-soft text-mint-strong" },
+  { icon: TrendingUp, tile: "bg-brand-soft text-primary" },
+  { icon: Rocket, tile: "bg-warning-soft text-warning" },
+];
+
+function StepMarker({ index }: { index: number }) {
+  const step = STEP_ICONS[(index - 1) % STEP_ICONS.length];
+  const Icon = step.icon;
+  return (
+    <span aria-hidden className="mr-[0.22em] hidden shrink-0 items-center sm:inline-flex">
+      {Array.from({ length: index - 1 }).map((_, i) => (
+        <span key={i} className="mx-[0.06em] block h-0 w-[0.62em] border-t-[3px] border-dotted border-primary/30" />
+      ))}
+      <span className={cn("grid size-[0.74em] place-items-center rounded-[0.2em] shadow-card", step.tile)}>
+        <Icon className="size-[0.42em]" strokeWidth={2.4} />
+      </span>
+    </span>
+  );
+}
 
 /**
  * The home hero. The headline steps forward line by line (a typographic
@@ -28,14 +53,15 @@ export function Hero({ content, subjectCount }: { content: SectionContent<"hero"
       />
       <Container className="relative grid items-center gap-12 pt-12 pb-16 sm:pt-16 lg:grid-cols-[1.08fr_0.92fr] lg:gap-10 lg:pt-20 lg:pb-24">
         <div>
-          <h1 className="font-heading text-[2.75rem] leading-[0.98] font-bold tracking-[-0.045em] text-foreground sm:text-[4rem] xl:text-[4.75rem]">
+          <h1 className="font-heading text-[2.6rem] leading-[1.02] font-bold tracking-[-0.045em] text-foreground sm:text-[3.1rem] lg:text-[3rem] xl:text-[3.6rem]">
             {lines.map((line, i) => (
               <span
                 key={`${i}-${line}`}
-                className={`block animate-rise ${STEP_INDENT[Math.min(i, STEP_INDENT.length - 1)]}`}
+                className="flex animate-rise items-center sm:whitespace-nowrap"
                 style={{ animationDelay: `${i * 90}ms` }}
               >
-                {line}
+                {i > 0 ? <StepMarker index={i} /> : null}
+                <span>{line}</span>
               </span>
             ))}
           </h1>
