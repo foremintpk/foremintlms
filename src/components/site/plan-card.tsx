@@ -92,16 +92,31 @@ export function PlanCard({
   );
 }
 
-/** A bundle or membership with its plans and included courses. */
+/**
+ * A bundle or membership with its plans and included courses.
+ *
+ * Laid out as three rows (header, inclusions, plans) on the parent grid's
+ * subgrid, so offers side by side line up row for row: their plan boxes start
+ * at the same height and stretch to the same size whatever each list holds.
+ * Outside a grid it falls back to a plain three-row stack.
+ */
 export function ProductOffer({ product, className }: { product: PublicProduct; className?: string }) {
   return (
-    <div className={cn("flex h-full flex-col rounded-3xl border bg-card p-6 sm:p-7", product.is_featured && "border-primary/30 bg-[linear-gradient(180deg,var(--brand-soft),var(--card)_45%)]", className)}>
-      <p className="text-sm font-medium text-primary">{product.kind === "membership" ? "Membership" : "Bundle"}</p>
-      <h3 className="mt-1 text-2xl font-semibold tracking-tight">{product.name}</h3>
-      {product.headline || product.description ? (
-        <p className="mt-2 text-muted-foreground">{product.headline ?? product.description}</p>
-      ) : null}
-      <ul className="mt-5 space-y-2.5 text-sm">
+    <div
+      className={cn(
+        "row-span-3 grid grid-rows-subgrid gap-y-5 rounded-3xl border bg-card p-6 sm:p-7",
+        product.is_featured && "border-primary/30 bg-[linear-gradient(180deg,var(--brand-soft),var(--card)_45%)]",
+        className,
+      )}
+    >
+      <div>
+        <p className="text-sm font-medium text-primary">{product.kind === "membership" ? "Membership" : "Bundle"}</p>
+        <h3 className="mt-1 text-2xl font-semibold tracking-tight">{product.name}</h3>
+        {product.headline || product.description ? (
+          <p className="mt-2 text-muted-foreground">{product.headline ?? product.description}</p>
+        ) : null}
+      </div>
+      <ul className="space-y-2.5 text-sm">
         {product.grants_all_courses ? (
           <li className="flex gap-2.5">
             <Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
@@ -128,7 +143,7 @@ export function ProductOffer({ product, className }: { product: PublicProduct; c
           <li className="pl-6.5 text-muted-foreground">and {product.courses.length - 6} more courses</li>
         ) : null}
       </ul>
-      <div className={cn("mt-6 grid gap-3", product.plans.length > 1 && "sm:grid-cols-2")}>
+      <div className={cn("mt-1 grid gap-3", product.plans.length > 1 && "sm:grid-cols-2")}>
         {product.plans.map((plan, i) => (
           <PlanCard key={plan.id} plan={plan} highlight={plan.is_featured || (i === 0 && product.plans.length === 1)} />
         ))}
