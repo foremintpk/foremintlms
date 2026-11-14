@@ -14,7 +14,7 @@ export function Container({ className, children }: { className?: string; childre
 export function ctaClass(variant: "primary" | "secondary" | "ghost" | "inverse" = "primary", className?: string) {
   return cn(
     buttonVariants({ variant: variant === "secondary" ? "outline" : variant === "ghost" ? "ghost" : "default" }),
-    "h-11 gap-2 rounded-xl px-5 text-[0.95rem] font-semibold",
+    "h-11 gap-2 rounded-full px-5 text-[0.95rem] font-semibold",
     variant === "primary" && "shadow-raised hover:bg-brand-strong",
     variant === "secondary" && "bg-card",
     variant === "inverse" && "bg-white text-ink hover:bg-white/90",
@@ -67,7 +67,7 @@ export function PageIntro({
   className?: string;
 }) {
   return (
-    <section className={cn("border-b bg-[linear-gradient(180deg,var(--brand-soft),transparent)] pt-14 pb-12 sm:pt-20 sm:pb-16", className)}>
+    <section className={cn("-mt-[4.25rem] border-b bg-[linear-gradient(180deg,var(--brand-soft),transparent)] pt-[calc(4.25rem+3.5rem)] pb-12 sm:pt-[calc(4.25rem+5rem)] sm:pb-16", className)}>
       <Container>
         <h1 className="max-w-3xl text-[2.4rem] leading-[1.02] font-bold tracking-[-0.035em] sm:text-[3.4rem]">{title}</h1>
         {description ? <p className="mt-5 max-w-2xl text-lg text-muted-foreground">{description}</p> : null}
@@ -191,7 +191,7 @@ export function SimplePagination({
 }) {
   const pages = Math.max(1, Math.ceil(total / pageSize));
   if (pages <= 1) return null;
-  const link = "inline-flex h-10 items-center rounded-xl border bg-card px-4 text-sm font-medium transition-colors hover:bg-muted";
+  const link = "inline-flex h-10 items-center rounded-full border bg-card px-4 text-sm font-medium transition-colors hover:bg-muted";
   return (
     <nav aria-label="Pagination" className="mt-12 flex items-center justify-between gap-4">
       {page > 1 ? (

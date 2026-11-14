@@ -44,7 +44,7 @@ export default async function InstructorPage({ params }: PageProps<"/instructors
           sameAs: [website, ...socials.map(([, u]) => u)].filter(Boolean),
         }}
       />
-      <section className="border-b bg-[linear-gradient(180deg,var(--brand-soft),transparent)]">
+      <section className="-mt-[4.25rem] border-b bg-[linear-gradient(180deg,var(--brand-soft),transparent)] pt-[4.25rem]">
         <Container className="py-10 sm:py-14">
           <Breadcrumbs items={[{ label: "Instructors", href: "/instructors" }, { label: instructor.public_name }]} />
           <div className="mt-8 flex flex-col gap-6 sm:flex-row sm:items-center">

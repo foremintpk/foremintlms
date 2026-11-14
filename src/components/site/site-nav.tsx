@@ -36,7 +36,7 @@ const PRIMARY = [
 ];
 
 const linkStyle =
-  "inline-flex h-9 items-center rounded-lg px-3 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 outline-none";
+  "inline-flex h-9 items-center rounded-full px-3 text-sm font-medium text-foreground/80 transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 outline-none";
 
 export function DesktopNav({ categories }: { categories: NavCategory[] }) {
   return (
@@ -60,10 +60,16 @@ export function DesktopNav({ categories }: { categories: NavCategory[] }) {
                   </li>
                 ))}
               </ul>
-              <div className="mt-2 border-t pt-2">
+              <div className="mt-2 grid grid-cols-2 gap-1 border-t pt-2">
                 <NavigationMenuLink asChild>
                   <Link href="/courses" className="justify-between rounded-lg p-2.5 text-sm font-semibold text-primary">
                     Browse all courses
+                  </Link>
+                </NavigationMenuLink>
+                <NavigationMenuLink asChild>
+                  <Link href="/courses/select" className="flex-col items-start gap-0.5 rounded-lg bg-brand-soft/60 p-2.5">
+                    <span className="text-sm font-semibold text-primary">Build your learning plan</span>
+                    <span className="text-xs text-muted-foreground">Choose the skills you want to master</span>
                   </Link>
                 </NavigationMenuLink>
               </div>
@@ -139,6 +145,11 @@ export function MobileNav({ categories, authSlot }: { categories: NavCategory[];
                   Browse all courses
                 </Link>
               </li>
+              <li>
+                <Link href="/courses/select" onClick={close} className="block rounded-lg px-3 py-2 text-sm font-semibold text-primary">
+                  Build your learning plan
+                </Link>
+              </li>
               {categories.map((c) => (
                 <li key={c.slug}>
                   <Link href={`/categories/${c.slug}`} onClick={close} className="block rounded-lg px-3 py-2 text-sm text-foreground/80 hover:bg-muted">
@@ -148,6 +159,9 @@ export function MobileNav({ categories, authSlot }: { categories: NavCategory[];
               ))}
             </ul>
           ) : null}
+          <Link href="/courses/select" onClick={close} className={cn(item, "text-primary")}>
+            Build your learning plan
+          </Link>
           {PRIMARY.map((p) => (
             <Link key={p.href} href={p.href} onClick={close} className={item}>
               {p.label}

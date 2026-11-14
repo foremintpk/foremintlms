@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Home, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -27,6 +27,9 @@ export interface FaqRow {
   sort_order: number;
   is_published: boolean;
   show_on_home: boolean;
+  keywords: string[];
+  advisor_enabled: boolean;
+  advisor_priority: number;
 }
 
 export function FaqFormDialog({ trigger, faq }: { trigger: React.ReactNode; faq?: FaqRow }) {
@@ -36,6 +39,7 @@ export function FaqFormDialog({ trigger, faq }: { trigger: React.ReactNode; faq?
   const [category, setCategory] = useState<Category>(faq?.category ?? "general");
   const [published, setPublished] = useState(faq?.is_published ?? true);
   const [home, setHome] = useState(faq?.show_on_home ?? false);
+  const [advisor, setAdvisor] = useState(faq?.advisor_enabled ?? true);
   const { run, pending, fieldErrors } = useAction(saveFaq, {
     onSuccess: () => {
       setOpen(false);
@@ -54,7 +58,21 @@ export function FaqFormDialog({ trigger, faq }: { trigger: React.ReactNode; faq?
           onSubmit={(e) => {
             e.preventDefault();
             const f = new FormData(e.currentTarget);
-            void run({ id: faq?.id, question: String(f.get("question") ?? ""), answer, category, is_published: published, show_on_home: home });
+            const keywords = String(f.get("keywords") ?? "")
+              .split(",")
+              .map((k) => k.trim())
+              .filter(Boolean);
+            void run({
+              id: faq?.id,
+              question: String(f.get("question") ?? ""),
+              answer,
+              category,
+              is_published: published,
+              show_on_home: home,
+              keywords,
+              advisor_enabled: advisor,
+              advisor_priority: Number(f.get("advisor_priority") ?? 0) || 0,
+            });
           }}
         >
           <FieldGroup>
@@ -91,6 +109,33 @@ export function FaqFormDialog({ trigger, faq }: { trigger: React.ReactNode; faq?
               <Switch id="faq-home" checked={home} onCheckedChange={setHome} />
               <FieldLabel htmlFor="faq-home">Show on the home page</FieldLabel>
             </Field>
+            <div className="grid gap-4 rounded-xl border p-4">
+              <Field orientation="horizontal">
+                <Switch id="faq-advisor" checked={advisor} onCheckedChange={setAdvisor} />
+                <FieldLabel htmlFor="faq-advisor">Use in the course advisor</FieldLabel>
+              </Field>
+              {advisor ? (
+                <>
+                  <Field>
+                    <FieldLabel htmlFor="faq-keywords">Advisor keywords</FieldLabel>
+                    <Input id="faq-keywords" name="keywords" defaultValue={faq?.keywords.join(", ")} placeholder="payment link, parent, employer, pay for me" />
+                    <FieldDescription>Comma-separated words or phrases that should find this answer (up to 20). The question&apos;s own words already count.</FieldDescription>
+                    <FieldError>{fieldErrors.keywords?.[0]}</FieldError>
+                  </Field>
+                  <Field>
+                    <FieldLabel htmlFor="faq-priority">Advisor priority</FieldLabel>
+                    <Input id="faq-priority" name="advisor_priority" type="number" min={0} max={10} defaultValue={faq?.advisor_priority ?? 0} className="w-28" />
+                    <FieldDescription>0–10. Higher wins when two FAQs match equally well.</FieldDescription>
+                    <FieldError>{fieldErrors.advisor_priority?.[0]}</FieldError>
+                  </Field>
+                </>
+              ) : (
+                <>
+                  <input type="hidden" name="keywords" value={faq?.keywords.join(", ") ?? ""} />
+                  <input type="hidden" name="advisor_priority" value={faq?.advisor_priority ?? 0} />
+                </>
+              )}
+            </div>
           </FieldGroup>
           <DialogFooter className="mt-6">
             <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={pending}>
@@ -117,6 +162,7 @@ export function FaqGroup({ items }: { items: FaqRow[] }) {
       renderItem={(f) => (
         <div className="flex items-center gap-3">
           <p className="min-w-0 flex-1 truncate text-sm font-medium">{f.question}</p>
+          {!f.advisor_enabled ? <span className="text-xs text-muted-foreground max-sm:hidden">Not in advisor</span> : null}
           {f.show_on_home ? (
             <span className="inline-flex items-center gap-1 text-xs text-muted-foreground max-sm:hidden">
               <Home className="size-3.5" /> Home

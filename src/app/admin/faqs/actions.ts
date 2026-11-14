@@ -1,5 +1,6 @@
 "use server";
 
+import { updateTag } from "next/cache";
 import { z } from "zod";
 import { assertAdmin } from "@/lib/auth/guards";
 import { ok, runAction, type ActionResult } from "@/lib/actions";
@@ -7,6 +8,7 @@ import { audit } from "@/lib/audit";
 import { createClient } from "@/lib/supabase/server";
 import { sanitizeRichText, stripHtml } from "@/lib/sanitize";
 import { PUBLIC_TAGS, refreshPublic } from "@/lib/services/admin/revalidate";
+import { ADVISOR_TAG } from "@/lib/services/advisor/knowledge";
 
 const FAQ_CATEGORIES = ["general", "courses", "billing", "certificates", "live", "technical", "instructors"] as const;
 
@@ -17,6 +19,10 @@ const faqSchema = z.object({
   category: z.enum(FAQ_CATEGORIES),
   is_published: z.boolean(),
   show_on_home: z.boolean(),
+  // Course advisor: extra words that should find this answer, whether it may answer, tie-break weight.
+  keywords: z.array(z.string().trim().min(1).max(60, "Keep each keyword under 60 characters")).max(20, "Use up to 20 keywords").default([]),
+  advisor_enabled: z.boolean().default(true),
+  advisor_priority: z.number().int().min(0, "Use 0 to 10").max(10, "Use 0 to 10").default(0),
 });
 
 export async function saveFaq(input: z.input<typeof faqSchema>): Promise<ActionResult<null>> {
@@ -28,7 +34,17 @@ export async function saveFaq(input: z.input<typeof faqSchema>): Promise<ActionR
       return { ok: false, error: "Check the highlighted fields.", fieldErrors: { answer: ["Write an answer"] } };
     }
     const supabase = await createClient();
-    const row = { question: data.question, answer, category: data.category, is_published: data.is_published, show_on_home: data.show_on_home };
+    const keywords = [...new Set(data.keywords.map((k) => k.toLowerCase()))];
+    const row = {
+      question: data.question,
+      answer,
+      category: data.category,
+      is_published: data.is_published,
+      show_on_home: data.show_on_home,
+      keywords,
+      advisor_enabled: data.advisor_enabled,
+      advisor_priority: data.advisor_priority,
+    };
     if (data.id) {
       const { error } = await supabase.from("faqs").update(row).eq("id", data.id);
       if (error) throw error;
@@ -39,6 +55,7 @@ export async function saveFaq(input: z.input<typeof faqSchema>): Promise<ActionR
     }
     await audit({ actor: user, action: data.id ? "faq.updated" : "faq.created", entityType: "faq", entityId: data.id ?? null, summary: data.question });
     refreshPublic(PUBLIC_TAGS.faqs);
+    updateTag(ADVISOR_TAG);
     return ok(null, data.id ? "FAQ saved" : "FAQ added");
   });
 }
@@ -52,6 +69,7 @@ export async function deleteFaq(input: { id: string }): Promise<ActionResult<nul
     if (error) throw error;
     await audit({ actor: user, action: "faq.deleted", entityType: "faq", entityId: id });
     refreshPublic(PUBLIC_TAGS.faqs);
+    updateTag(ADVISOR_TAG);
     return ok(null, "FAQ deleted");
   });
 }

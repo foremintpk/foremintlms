@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CheckCircle2, CircleAlert, Clock } from "lucide-react";
 import { Container, ctaClass } from "@/components/site/primitives";
 import { CheckoutStatusPoller } from "@/components/billing/checkout-status-poller";
+import { OrderStatusView } from "@/components/commerce/order-status-view";
 import { requireUser } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -17,10 +18,14 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-type Search = { session?: string; status?: string };
+type Search = { session?: string; status?: string; order?: string };
 
 export default async function CheckoutSuccessPage({ searchParams }: PageProps<"/checkout/success">) {
   const params = (await searchParams) as Search;
+  // Course-package orders (guest checkout): no sign-in; the order token authorises the view.
+  if (typeof params.order === "string") {
+    return <OrderStatusView token={params.order} providerStatus={typeof params.status === "string" ? params.status : null} returnedFromCheckout />;
+  }
   const sessionId = typeof params.session === "string" ? params.session : "";
   const user = await requireUser(`/checkout/success${sessionId ? `?session=${encodeURIComponent(sessionId)}` : ""}`);
 

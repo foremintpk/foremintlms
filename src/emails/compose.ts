@@ -193,6 +193,9 @@ export function composeEmail(
   const details = asDetails(payload.details);
   const lineItems = asLineItems(payload.line_items);
   const total = typeof payload.total === "string" ? payload.total : null;
+  // Optional second, plain link under the button (e.g. "Download invoice (PDF)").
+  const secondaryUrl = safeUrl(payload.secondary_url);
+  const secondaryLabel = typeof payload.secondary_label === "string" ? oneLine(payload.secondary_label).slice(0, 80) : "";
   const color = /^#[0-9a-f]{6}$/i.test(ctx.primaryColor) ? ctx.primaryColor : "#5B3DF5";
 
   const legalLine = [ctx.legalEntityName, ctx.businessAddress].filter(Boolean).map(escapeHtml).join(" · ");
@@ -226,6 +229,7 @@ ${paragraphsHtml(body)}
 ${detailsHtml(details)}
 ${lineItemsHtml(lineItems, total)}
 ${ctaUrl && ctaLabel ? buttonHtml(ctaLabel, ctaUrl, color) : ""}
+${secondaryUrl && secondaryLabel ? `<p style="margin:0 0 8px;font-size:14px;line-height:20px;"><a href="${escapeHtml(secondaryUrl)}" target="_blank" style="color:${escapeHtml(color)};font-weight:600;text-decoration:underline;">${escapeHtml(secondaryLabel)}</a></p>` : ""}
 </td></tr>
 <tr><td style="padding:20px 8px 0;font-size:12px;line-height:18px;color:${MUTED};">
 <p style="margin:0 0 6px;">${supportLine}</p>
@@ -246,6 +250,7 @@ ${legalLine ? `<p style="margin:0;">${legalLine}</p>` : ""}
     if (total) textParts.push(`Total: ${total}`);
   }
   if (ctaUrl && ctaLabel) textParts.push("", `${ctaLabel}: ${ctaUrl}`);
+  if (secondaryUrl && secondaryLabel) textParts.push(`${secondaryLabel}: ${secondaryUrl}`);
   textParts.push(
     "",
     "—",

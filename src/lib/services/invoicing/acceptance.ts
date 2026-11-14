@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { UserFacingError } from "@/lib/actions";
 import { audit } from "@/lib/audit";
 import { logAuthEvent } from "@/lib/services/account";
+import { attachPaidOrdersToUser } from "@/lib/services/commerce/fulfillment";
 import { describePackage, syncPackageAccess, welcomeCoveredLearners } from "./access";
 import { addCompanyMember, announceMemberJoined, loadCompany } from "./companies";
 import { logCompanyAudit, logInvoiceEvent } from "./events";
@@ -18,6 +19,15 @@ import type { CustomInvoiceRow } from "./whop-invoices";
 export async function acceptAccessInvitation(row: AccessInvitationRow, user: { id: string; email: string }): Promise<{ redirectTo: string }> {
   const admin = createAdminClient();
   if (accessInvitationState(row) !== "valid") throw new UserFacingError("This invitation is no longer valid.");
+
+  if (row.kind === "order_activation") {
+    // The single-use token proves the learner controls this email: attach
+    // every paid course-package order waiting for it (normally just this one).
+    await claimAccessInvitation(row, user);
+    await attachPaidOrdersToUser({ id: user.id, email: user.email }, { viaActivation: true });
+    await logAuthEvent({ userId: user.id, email: user.email, event: "invitation_accepted", metadata: { kind: row.kind } });
+    return { redirectTo: "/learn/courses" };
+  }
 
   if (row.kind === "purchase_activation") {
     const invitation = await claimAccessInvitation(row, user);

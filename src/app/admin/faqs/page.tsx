@@ -17,7 +17,7 @@ export default async function FaqsPage() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("faqs")
-    .select("id, question, answer, category, sort_order, is_published, show_on_home")
+    .select("id, question, answer, category, sort_order, is_published, show_on_home, keywords, advisor_enabled, advisor_priority")
     .order("sort_order");
   if (error) throw new Error(error.message);
   const faqs = (data ?? []) as FaqRow[];
@@ -27,7 +27,7 @@ export default async function FaqsPage() {
     <>
       <PageHeader
         title="FAQs"
-        description="Answers shown on the FAQ page. Mark a few as “show on home” for the home page FAQ section."
+        description="Answers shown on the FAQ page. Mark a few as “show on home” for the home page FAQ section. Published FAQs also answer questions in the course advisor — add keywords to help it find the right one."
         actions={<FaqFormDialog trigger={<Button>New FAQ</Button>} />}
       />
       {faqs.length === 0 ? (

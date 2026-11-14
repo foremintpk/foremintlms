@@ -8,6 +8,8 @@ import { CourseOutline } from "@/components/site/course-outline";
 import { EnrollFreeButton } from "@/components/site/forms";
 import { PersonAvatar } from "@/components/site/people";
 import { PlanCard, ProductOffer } from "@/components/site/plan-card";
+import { AddToPlanButton } from "@/components/commerce/add-to-plan-button";
+import { selectorOfferForCourse } from "@/lib/services/commerce/catalog";
 import { Breadcrumbs, Container, JsonLd, MediaImage, RatingStars, ctaClass } from "@/components/site/primitives";
 import { RichContent } from "@/components/common/rich-content";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -112,11 +114,12 @@ export default async function CoursePage({ params }: PageProps<"/courses/[slug]"
   const course = await getCourseBySlug(slug);
   if (!course) notFound();
 
-  const [pricing, reviews, related, settings] = await Promise.all([
+  const [pricing, reviews, related, settings, packageOffer] = await Promise.all([
     getCoursePricing(course.id),
     course.rating ? getCourseReviews(course.id, 6) : Promise.resolve([]),
     getRelatedCourses(course.id, course.category?.id ?? null, 3),
     getPublicSettings(),
+    selectorOfferForCourse(course.id),
   ]);
   const ownPlans = pricing.own?.plans ?? [];
   const hasFreePlan = ownPlans.some((p) => p.plan_type === "free" && p.available);
@@ -169,7 +172,7 @@ export default async function CoursePage({ params }: PageProps<"/courses/[slug]"
       />
 
       <div className="relative">
-        <div aria-hidden className="absolute inset-x-0 top-0 h-[460px] bg-[linear-gradient(180deg,var(--brand-soft),transparent)]" />
+        <div aria-hidden className="absolute inset-x-0 -top-[4.25rem] h-[528px] bg-[linear-gradient(180deg,var(--brand-soft),transparent)]" />
         <Container className="relative grid gap-10 pt-8 pb-16 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-x-14 lg:gap-y-0 lg:pt-10">
           <div className="lg:col-start-1 lg:row-start-1 lg:pb-12">
             <Breadcrumbs
@@ -235,6 +238,7 @@ export default async function CoursePage({ params }: PageProps<"/courses/[slug]"
                     <CourseCta course={course} hasFreePlan={hasFreePlan} hasPaidPlans={hasPaidPlans} />
                   </Suspense>
                 </div>
+                {packageOffer.offered ? <AddToPlanButton courseId={course.id} courseTitle={course.title} className="mt-3" /> : null}
                 <ul className="mt-5 space-y-2 text-sm text-muted-foreground">
                   <li className="flex gap-2">
                     <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />

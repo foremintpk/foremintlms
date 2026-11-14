@@ -11,11 +11,11 @@ import type { ReceiptSnapshot } from "@/lib/services/billing/receipt-model";
  * Foremint generated it from a Whop payment; it is not a Whop document.
  */
 
-const INK = "#15122E";
-const MUTED = "#615D80";
-const BRAND = "#5B3DF5";
-const LINE = "#E6E3F0";
-const SOFT = "#F3F2F8";
+export const INK = "#15122E";
+export const MUTED = "#615D80";
+export const BRAND = "#5B3DF5";
+export const LINE = "#E6E3F0";
+export const SOFT = "#F3F2F8";
 
 let fontsReady: "custom" | "fallback" | null = null;
 
@@ -23,7 +23,7 @@ function fontPath(pkg: string, file: string) {
   return path.join(process.cwd(), "node_modules", "@fontsource", pkg, "files", file);
 }
 
-function ensureFonts(): "custom" | "fallback" {
+export function ensureFonts(): "custom" | "fallback" {
   if (fontsReady) return fontsReady;
   const files = {
     sans400: fontPath("funnel-sans", "funnel-sans-latin-400-normal.woff"),
@@ -47,7 +47,7 @@ function ensureFonts(): "custom" | "fallback" {
   return fontsReady;
 }
 
-async function loadLogo(origin: string): Promise<Buffer | null> {
+export async function loadLogo(origin: string): Promise<Buffer | null> {
   const local = path.join(process.cwd(), "public", "brand", "foremint-mark-256.png");
   try {
     if (fs.existsSync(local)) return fs.readFileSync(local);
@@ -59,7 +59,7 @@ async function loadLogo(origin: string): Promise<Buffer | null> {
   return null;
 }
 
-function makeStyles(fonts: "custom" | "fallback") {
+export function makeStyles(fonts: "custom" | "fallback") {
   const sans = fonts === "custom" ? "FunnelSans" : "Helvetica";
   const display = fonts === "custom" ? "FunnelDisplay" : "Helvetica-Bold";
   const bold = fonts === "custom" ? { fontFamily: "FunnelSans", fontWeight: 600 as const } : { fontFamily: "Helvetica-Bold" };

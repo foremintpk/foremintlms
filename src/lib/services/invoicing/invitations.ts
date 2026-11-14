@@ -6,6 +6,8 @@ import { firstName, formatDate } from "@/lib/format";
 import { randomToken, sha256 } from "@/lib/security/crypto";
 import { enqueueEmail } from "@/lib/services/email/outbox";
 import type { Tables } from "@/types/database";
+import { courseTitlesText, orderAccessSummary } from "@/lib/domain/commerce";
+import { loadOrder, loadOrderItems } from "@/lib/services/commerce/store";
 import { describePackage } from "./access";
 import { getInvoicingSettings } from "./settings";
 
@@ -18,7 +20,7 @@ import { getInvoicingSettings } from "./settings";
  */
 
 export type AccessInvitationRow = Tables<"access_invitations">;
-export type InvitationKind = "company_member" | "company_contact" | "purchase_activation";
+export type InvitationKind = "company_member" | "company_contact" | "purchase_activation" | "order_activation";
 export type InvitationState = "valid" | "expired" | "revoked" | "accepted" | "invalid";
 
 export function accessInvitationState(row: Pick<AccessInvitationRow, "status" | "expires_at"> | null, now = new Date()): InvitationState {
@@ -43,6 +45,8 @@ interface CreateInput {
   fullName?: string | null;
   companyId?: string | null;
   invoiceId?: string | null;
+  /** Course-package order whose learner has no account yet (kind "order_activation"). */
+  publicOrderId?: string | null;
   canInviteMembers?: boolean;
   invitedBy?: string | null;
   invitedByRole: "admin" | "company" | "system";
@@ -60,7 +64,11 @@ export async function createAccessInvitation(input: CreateInput, inviterName?: s
   const expiresAt = new Date(Date.now() + settings.invitationTtlDays * 86_400_000).toISOString();
 
   let pendingQuery = admin.from("access_invitations").select("*").eq("email", emailAddr).eq("status", "pending");
-  pendingQuery = input.companyId ? pendingQuery.eq("company_id", input.companyId) : pendingQuery.eq("invoice_id", input.invoiceId!).eq("kind", "purchase_activation");
+  pendingQuery = input.companyId
+    ? pendingQuery.eq("company_id", input.companyId)
+    : input.publicOrderId
+      ? pendingQuery.eq("public_order_id", input.publicOrderId).eq("kind", "order_activation")
+      : pendingQuery.eq("invoice_id", input.invoiceId!).eq("kind", "purchase_activation");
   const { data: pending } = await pendingQuery.maybeSingle();
   if (pending) {
     if (input.invitedByRole !== "system" && new Date(pending.expires_at).getTime() > Date.now()) {
@@ -76,6 +84,7 @@ export async function createAccessInvitation(input: CreateInput, inviterName?: s
       kind: input.kind,
       company_id: input.companyId ?? null,
       invoice_id: input.invoiceId ?? null,
+      public_order_id: input.publicOrderId ?? null,
       email: emailAddr,
       full_name: input.fullName ?? null,
       token_hash: sha256(token),
@@ -172,6 +181,20 @@ export async function expireLapsedInvitations(): Promise<number> {
 
 async function packageForInvitation(row: AccessInvitationRow) {
   const admin = db();
+  if (row.kind === "order_activation" && row.public_order_id) {
+    const [order, items] = await Promise.all([loadOrder(row.public_order_id), loadOrderItems(row.public_order_id)]);
+    const titles = items.map((i) => i.course_title_snapshot);
+    return {
+      companyName: null,
+      invoice: null,
+      pkg: {
+        packageName: order?.order_number ?? "",
+        courseList: courseTitlesText(titles, 12),
+        accessSummary: order ? orderAccessSummary(order.duration_days, order.paid_at ? new Date(order.paid_at) : null) : "",
+        courseCount: titles.length,
+      },
+    };
+  }
   if (row.kind === "purchase_activation" && row.invoice_id) {
     const { data: inv } = await admin.from("custom_invoices").select("*").eq("id", row.invoice_id).single();
     const { data: ent } = await admin.from("invoice_entitlements").select("expires_at, status").eq("invoice_id", row.invoice_id).maybeSingle();
@@ -197,7 +220,13 @@ async function packageForInvitation(row: AccessInvitationRow) {
 async function sendInvitationEmail(row: AccessInvitationRow, token: string, inviterName?: string | null) {
   const { companyName, invoice, pkg } = await packageForInvitation(row);
   const templateKey =
-    row.kind === "purchase_activation" ? "invoice.account_activation" : row.kind === "company_contact" ? "company.contact_invitation" : "company.employee_invitation";
+    row.kind === "order_activation"
+      ? "order.account_activation"
+      : row.kind === "purchase_activation"
+        ? "invoice.account_activation"
+        : row.kind === "company_contact"
+          ? "company.contact_invitation"
+          : "company.employee_invitation";
   await enqueueEmail({
     templateKey,
     to: row.email,
@@ -210,6 +239,7 @@ async function sendInvitationEmail(row: AccessInvitationRow, token: string, invi
       course_list: pkg.courseList,
       access_summary: pkg.accessSummary,
       expires_at: formatDate(row.expires_at),
+      learner_email: row.email,
       cta_url: appUrl(`/join/${token}`),
     },
   });

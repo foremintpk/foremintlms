@@ -75,7 +75,7 @@ export function CourseCard({ course, className, priority }: { course: CourseCard
           </div>
           <span
             aria-hidden
-            className="inline-flex h-9 shrink-0 items-center rounded-lg border bg-background px-3 text-sm font-medium transition-colors group-hover:border-primary/40 group-hover:text-primary"
+            className="inline-flex h-9 shrink-0 items-center rounded-full border bg-background px-3 text-sm font-medium transition-colors group-hover:border-primary/40 group-hover:text-primary"
           >
             View course
           </span>

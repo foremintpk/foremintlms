@@ -16,6 +16,7 @@ import { StatCard } from "@/components/common/stat-card";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateRangeFilter } from "@/components/admin/date-range-filter";
 import { DashboardSkeleton } from "@/components/admin/page-skeleton";
+import { CoursePackagesOverview } from "@/components/admin/commerce/overview-section";
 import { TimeSeriesChart } from "@/components/admin/charts/time-series-chart";
 import { BarList } from "@/components/admin/charts/bar-list";
 import { humanizeStatus } from "@/components/common/status-badge";
@@ -238,6 +239,8 @@ async function OverviewBody({ sp }: { sp: Search }) {
           <StatCard label="Certificates issued" value={compactNumber(m.certificates_issued)} />
         </div>
       </section>
+
+      <CoursePackagesOverview from={range.from} to={range.to} />
     </>
   );
 }

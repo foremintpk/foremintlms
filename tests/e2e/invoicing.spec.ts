@@ -45,7 +45,7 @@ test.describe("custom invoicing: boundaries", () => {
     await page.goto(`/join/${"x".repeat(43)}`);
     await expect(page.getByText(/isn.t valid/i)).toBeVisible();
     await page.goto("/payment/complete?ref=00000000-0000-4000-8000-000000000000&status=success");
-    await expect(page.getByText(/couldn.t find that payment/i)).toBeVisible();
+    await expect(page.getByRole("heading", { name: /couldn.t find that payment/i })).toBeVisible();
   });
 
   test("a student can't open admin billing and isn't shown a company", async ({ page }) => {

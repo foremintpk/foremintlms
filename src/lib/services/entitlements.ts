@@ -27,6 +27,8 @@ export interface GrantInput {
   paymentTransactionId?: string | null;
   subscriptionRecordId?: string | null;
   whopMembershipId?: string | null;
+  /** Public course-package order: one entitlement per order and course (idempotent fulfilment). */
+  publicOrderId?: string | null;
   grantedBy?: string | null;
   reason?: string | null;
   /** Send enrollment notifications/emails (default true). */
@@ -80,7 +82,8 @@ export async function grantAccess(input: GrantInput): Promise<GrantResult> {
     // Idempotency: one entitlement per (payment|subscription) and course.
     let existingQuery = admin.from("course_entitlements").select("id").eq("user_id", input.userId);
     existingQuery = courseId ? existingQuery.eq("course_id", courseId) : existingQuery.is("course_id", null).eq("scope", "all_access");
-    if (input.paymentTransactionId) existingQuery = existingQuery.eq("payment_transaction_id", input.paymentTransactionId);
+    if (input.publicOrderId) existingQuery = existingQuery.eq("public_order_id", input.publicOrderId);
+    else if (input.paymentTransactionId) existingQuery = existingQuery.eq("payment_transaction_id", input.paymentTransactionId);
     else if (input.subscriptionRecordId) existingQuery = existingQuery.eq("subscription_record_id", input.subscriptionRecordId);
     else existingQuery = existingQuery.eq("source", input.source).eq("status", "active").is("payment_transaction_id", null).is("subscription_record_id", null);
     const { data: existing } = await existingQuery.limit(1).maybeSingle();
@@ -96,6 +99,7 @@ export async function grantAccess(input: GrantInput): Promise<GrantResult> {
       payment_transaction_id: input.paymentTransactionId ?? null,
       subscription_record_id: input.subscriptionRecordId ?? null,
       whop_membership_id: input.whopMembershipId ?? null,
+      public_order_id: input.publicOrderId ?? null,
       status: "active",
       starts_at: startsAt.toISOString(),
       expires_at: input.expiresAt ? input.expiresAt.toISOString() : null,

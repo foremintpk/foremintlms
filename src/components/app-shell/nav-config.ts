@@ -1,6 +1,7 @@
 import {
   Award,
   BarChart3,
+  Bot,
   Bell,
   BookOpen,
   BookOpenCheck,
@@ -38,6 +39,7 @@ import {
   Scale,
   Settings,
   ShieldCheck,
+  ShoppingBag,
   Star,
   TicketPercent,
   Trophy,
@@ -159,7 +161,9 @@ export const NAV: Record<ShellArea, NavGroup[]> = {
     {
       label: "Commerce",
       items: [
-        { title: "Pricing & plans", href: "/admin/pricing", icon: Package },
+        { title: "Pricing & plans", href: "/admin/pricing", icon: Package, excludePrefixes: ["/admin/pricing/public"] },
+        { title: "Public course pricing", href: "/admin/pricing/public", icon: ShoppingBag },
+        { title: "Course orders", href: "/admin/orders", icon: ClipboardList },
         { title: "Bundles & memberships", href: "/admin/bundles", icon: Layers },
         { title: "Coupons", href: "/admin/coupons", icon: TicketPercent },
       ],
@@ -197,6 +201,7 @@ export const NAV: Record<ShellArea, NavGroup[]> = {
         { title: "Testimonials", href: "/admin/testimonials", icon: Quote },
         { title: "Case studies", href: "/admin/case-studies", icon: Trophy },
         { title: "FAQs", href: "/admin/faqs", icon: HelpCircle },
+        { title: "Course advisor", href: "/admin/advisor", icon: Bot },
         { title: "Legal pages", href: "/admin/legal", icon: Scale },
         { title: "Leads & newsletter", href: "/admin/leads", icon: Inbox },
       ],

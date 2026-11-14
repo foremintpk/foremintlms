@@ -33,6 +33,7 @@ export type Database = {
           invoice_id: string | null
           kind: string
           last_sent_at: string
+          public_order_id: string | null
           revoked_at: string | null
           revoked_by: string | null
           send_count: number
@@ -55,6 +56,7 @@ export type Database = {
           invoice_id?: string | null
           kind: string
           last_sent_at?: string
+          public_order_id?: string | null
           revoked_at?: string | null
           revoked_by?: string | null
           send_count?: number
@@ -77,6 +79,7 @@ export type Database = {
           invoice_id?: string | null
           kind?: string
           last_sent_at?: string
+          public_order_id?: string | null
           revoked_at?: string | null
           revoked_by?: string | null
           send_count?: number
@@ -111,6 +114,13 @@ export type Database = {
             columns: ["invoice_id"]
             isOneToOne: false
             referencedRelation: "custom_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "access_invitations_public_order_id_fkey"
+            columns: ["public_order_id"]
+            isOneToOne: false
+            referencedRelation: "public_course_orders"
             referencedColumns: ["id"]
           },
           {
@@ -1507,7 +1517,9 @@ export type Database = {
       coupons: {
         Row: {
           amount: number
+          applies_to: string
           code: string
+          course_ids: string[]
           created_at: string
           created_by: string | null
           currency: string | null
@@ -1516,6 +1528,8 @@ export type Database = {
           expires_at: string | null
           id: string
           max_redemptions: number | null
+          max_redemptions_per_customer: number | null
+          min_subtotal_cents: number | null
           new_customers_only: boolean
           plan_ids: string[]
           redemptions_count: number
@@ -1528,7 +1542,9 @@ export type Database = {
         }
         Insert: {
           amount: number
+          applies_to?: string
           code: string
+          course_ids?: string[]
           created_at?: string
           created_by?: string | null
           currency?: string | null
@@ -1537,6 +1553,8 @@ export type Database = {
           expires_at?: string | null
           id?: string
           max_redemptions?: number | null
+          max_redemptions_per_customer?: number | null
+          min_subtotal_cents?: number | null
           new_customers_only?: boolean
           plan_ids?: string[]
           redemptions_count?: number
@@ -1549,7 +1567,9 @@ export type Database = {
         }
         Update: {
           amount?: number
+          applies_to?: string
           code?: string
+          course_ids?: string[]
           created_at?: string
           created_by?: string | null
           currency?: string | null
@@ -1558,6 +1578,8 @@ export type Database = {
           expires_at?: string | null
           id?: string
           max_redemptions?: number | null
+          max_redemptions_per_customer?: number | null
+          min_subtotal_cents?: number | null
           new_customers_only?: boolean
           plan_ids?: string[]
           redemptions_count?: number
@@ -1577,6 +1599,282 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      course_advisor_conversation_sessions: {
+        Row: {
+          cart_id: string | null
+          conversation_state: Json
+          current_intent: string | null
+          ended_at: string | null
+          fallback_count: number
+          id: string
+          last_activity_at: string
+          message_count: number
+          order_id: string | null
+          session_status: string
+          started_at: string
+          token_hash: string
+        }
+        Insert: {
+          cart_id?: string | null
+          conversation_state?: Json
+          current_intent?: string | null
+          ended_at?: string | null
+          fallback_count?: number
+          id?: string
+          last_activity_at?: string
+          message_count?: number
+          order_id?: string | null
+          session_status?: string
+          started_at?: string
+          token_hash: string
+        }
+        Update: {
+          cart_id?: string | null
+          conversation_state?: Json
+          current_intent?: string | null
+          ended_at?: string | null
+          fallback_count?: number
+          id?: string
+          last_activity_at?: string
+          message_count?: number
+          order_id?: string | null
+          session_status?: string
+          started_at?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_advisor_conversation_sessions_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "public_carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_advisor_conversation_sessions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "public_course_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_advisor_intents: {
+        Row: {
+          created_at: string
+          description: string | null
+          follow_up: Json | null
+          id: string
+          intent_key: string
+          is_active: boolean
+          priority: number
+          response: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          follow_up?: Json | null
+          id?: string
+          intent_key: string
+          is_active?: boolean
+          priority?: number
+          response: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          follow_up?: Json | null
+          id?: string
+          intent_key?: string
+          is_active?: boolean
+          priority?: number
+          response?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      course_advisor_keywords: {
+        Row: {
+          created_at: string
+          id: string
+          intent_id: string
+          is_active: boolean
+          keyword: string
+          match_type: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          intent_id: string
+          is_active?: boolean
+          keyword: string
+          match_type?: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          intent_id?: string
+          is_active?: boolean
+          keyword?: string
+          match_type?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_advisor_keywords_intent_id_fkey"
+            columns: ["intent_id"]
+            isOneToOne: false
+            referencedRelation: "course_advisor_intents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_advisor_messages: {
+        Row: {
+          confidence: number | null
+          content: string | null
+          created_at: string
+          event_course_ids: string[]
+          event_type: string | null
+          id: string
+          matched_faq_id: string | null
+          matched_intent: string | null
+          message_role: string
+          order_id: string | null
+          recommended_course_ids: string[]
+          session_id: string
+        }
+        Insert: {
+          confidence?: number | null
+          content?: string | null
+          created_at?: string
+          event_course_ids?: string[]
+          event_type?: string | null
+          id?: string
+          matched_faq_id?: string | null
+          matched_intent?: string | null
+          message_role: string
+          order_id?: string | null
+          recommended_course_ids?: string[]
+          session_id: string
+        }
+        Update: {
+          confidence?: number | null
+          content?: string | null
+          created_at?: string
+          event_course_ids?: string[]
+          event_type?: string | null
+          id?: string
+          matched_faq_id?: string | null
+          matched_intent?: string | null
+          message_role?: string
+          order_id?: string | null
+          recommended_course_ids?: string[]
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_advisor_messages_matched_faq_id_fkey"
+            columns: ["matched_faq_id"]
+            isOneToOne: false
+            referencedRelation: "faqs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_advisor_messages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "public_course_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_advisor_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "course_advisor_conversation_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_advisor_recommendations: {
+        Row: {
+          course_id: string
+          created_at: string
+          explanation: string | null
+          id: string
+          intent_id: string
+          is_active: boolean
+          recommendation_priority: number
+          role: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          intent_id: string
+          is_active?: boolean
+          recommendation_priority?: number
+          role?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          intent_id?: string
+          is_active?: boolean
+          recommendation_priority?: number
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_advisor_recommendations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_advisor_recommendations_intent_id_fkey"
+            columns: ["intent_id"]
+            isOneToOne: false
+            referencedRelation: "course_advisor_intents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_advisor_synonyms: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          replacement: string
+          term: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          replacement: string
+          term: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          replacement?: string
+          term?: string
+        }
+        Relationships: []
       }
       course_bundles: {
         Row: {
@@ -1764,6 +2062,7 @@ export type Database = {
           payment_transaction_id: string | null
           pricing_plan_id: string | null
           product_id: string | null
+          public_order_id: string | null
           revoke_reason: string | null
           revoked_at: string | null
           revoked_by: string | null
@@ -1790,6 +2089,7 @@ export type Database = {
           payment_transaction_id?: string | null
           pricing_plan_id?: string | null
           product_id?: string | null
+          public_order_id?: string | null
           revoke_reason?: string | null
           revoked_at?: string | null
           revoked_by?: string | null
@@ -1816,6 +2116,7 @@ export type Database = {
           payment_transaction_id?: string | null
           pricing_plan_id?: string | null
           product_id?: string | null
+          public_order_id?: string | null
           revoke_reason?: string | null
           revoked_at?: string | null
           revoked_by?: string | null
@@ -1883,6 +2184,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_entitlements_public_order_id_fkey"
+            columns: ["public_order_id"]
+            isOneToOne: false
+            referencedRelation: "public_course_orders"
             referencedColumns: ["id"]
           },
           {
@@ -2283,8 +2591,8 @@ export type Database = {
           billing_cycles: number | null
           billing_interval_days: number | null
           billing_type: string
-          collection_method: string
           cancelled_at: string | null
+          collection_method: string
           company_description: string | null
           company_id: string | null
           company_name: string | null
@@ -2343,8 +2651,8 @@ export type Database = {
           billing_cycles?: number | null
           billing_interval_days?: number | null
           billing_type: string
-          collection_method?: string
           cancelled_at?: string | null
+          collection_method?: string
           company_description?: string | null
           company_id?: string | null
           company_name?: string | null
@@ -2403,8 +2711,8 @@ export type Database = {
           billing_cycles?: number | null
           billing_interval_days?: number | null
           billing_type?: string
-          collection_method?: string
           cancelled_at?: string | null
+          collection_method?: string
           company_description?: string | null
           company_id?: string | null
           company_name?: string | null
@@ -2847,33 +3155,42 @@ export type Database = {
       }
       faqs: {
         Row: {
+          advisor_enabled: boolean
+          advisor_priority: number
           answer: string
           category: string
           created_at: string
           id: string
           is_published: boolean
+          keywords: string[]
           question: string
           show_on_home: boolean
           sort_order: number
           updated_at: string
         }
         Insert: {
+          advisor_enabled?: boolean
+          advisor_priority?: number
           answer: string
           category?: string
           created_at?: string
           id?: string
           is_published?: boolean
+          keywords?: string[]
           question: string
           show_on_home?: boolean
           sort_order?: number
           updated_at?: string
         }
         Update: {
+          advisor_enabled?: boolean
+          advisor_priority?: number
           answer?: string
           category?: string
           created_at?: string
           id?: string
           is_published?: boolean
+          keywords?: string[]
           question?: string
           show_on_home?: boolean
           sort_order?: number
@@ -4265,6 +4582,7 @@ export type Database = {
           plan_id: string | null
           product_id: string | null
           promo_code: string | null
+          public_order_id: string | null
           raw: Json
           refunded_at: string | null
           refunded_cents: number
@@ -4294,6 +4612,7 @@ export type Database = {
           plan_id?: string | null
           product_id?: string | null
           promo_code?: string | null
+          public_order_id?: string | null
           raw?: Json
           refunded_at?: string | null
           refunded_cents?: number
@@ -4323,6 +4642,7 @@ export type Database = {
           plan_id?: string | null
           product_id?: string | null
           promo_code?: string | null
+          public_order_id?: string | null
           raw?: Json
           refunded_at?: string | null
           refunded_cents?: number
@@ -4363,6 +4683,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_transactions_public_order_id_fkey"
+            columns: ["public_order_id"]
+            isOneToOne: false
+            referencedRelation: "public_course_orders"
             referencedColumns: ["id"]
           },
           {
@@ -4428,6 +4755,7 @@ export type Database = {
           description: string | null
           grace_period_days: number
           id: string
+          in_course_selector: boolean
           is_featured: boolean
           name: string
           plan_type: string
@@ -4455,6 +4783,7 @@ export type Database = {
           description?: string | null
           grace_period_days?: number
           id?: string
+          in_course_selector?: boolean
           is_featured?: boolean
           name: string
           plan_type: string
@@ -4482,6 +4811,7 @@ export type Database = {
           description?: string | null
           grace_period_days?: number
           id?: string
+          in_course_selector?: boolean
           is_featured?: boolean
           name?: string
           plan_type?: string
@@ -4704,6 +5034,376 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      public_carts: {
+        Row: {
+          access_duration: string | null
+          coupon_code: string | null
+          course_ids: string[]
+          created_at: string
+          expires_at: string
+          id: string
+          last_order_id: string | null
+          learner_email: string | null
+          token_hash: string
+          updated_at: string
+        }
+        Insert: {
+          access_duration?: string | null
+          coupon_code?: string | null
+          course_ids?: string[]
+          created_at?: string
+          expires_at?: string
+          id?: string
+          last_order_id?: string | null
+          learner_email?: string | null
+          token_hash: string
+          updated_at?: string
+        }
+        Update: {
+          access_duration?: string | null
+          coupon_code?: string | null
+          course_ids?: string[]
+          created_at?: string
+          expires_at?: string
+          id?: string
+          last_order_id?: string | null
+          learner_email?: string | null
+          token_hash?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_carts_last_order_fk"
+            columns: ["last_order_id"]
+            isOneToOne: false
+            referencedRelation: "public_course_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      public_course_order_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          dedupe_key: string | null
+          event_data: Json
+          event_type: string
+          id: string
+          new_status: string | null
+          old_status: string | null
+          order_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          event_data?: Json
+          event_type: string
+          id?: string
+          new_status?: string | null
+          old_status?: string | null
+          order_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          event_data?: Json
+          event_type?: string
+          id?: string
+          new_status?: string | null
+          old_status?: string | null
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_course_order_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "public_course_order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "public_course_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      public_course_order_items: {
+        Row: {
+          category_snapshot: string | null
+          course_id: string | null
+          course_price_minor: number
+          course_slug_snapshot: string
+          course_title_snapshot: string
+          created_at: string
+          currency: string
+          discount_minor: number
+          duration_days: number | null
+          id: string
+          order_id: string
+          pricing_plan_id: string | null
+          product_id: string | null
+          sort_order: number
+        }
+        Insert: {
+          category_snapshot?: string | null
+          course_id?: string | null
+          course_price_minor: number
+          course_slug_snapshot: string
+          course_title_snapshot: string
+          created_at?: string
+          currency: string
+          discount_minor?: number
+          duration_days?: number | null
+          id?: string
+          order_id: string
+          pricing_plan_id?: string | null
+          product_id?: string | null
+          sort_order?: number
+        }
+        Update: {
+          category_snapshot?: string | null
+          course_id?: string | null
+          course_price_minor?: number
+          course_slug_snapshot?: string
+          course_title_snapshot?: string
+          created_at?: string
+          currency?: string
+          discount_minor?: number
+          duration_days?: number | null
+          id?: string
+          order_id?: string
+          pricing_plan_id?: string | null
+          product_id?: string | null
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_course_order_items_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "public_course_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "public_course_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "public_course_order_items_pricing_plan_id_fkey"
+            columns: ["pricing_plan_id"]
+            isOneToOne: false
+            referencedRelation: "pricing_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "public_course_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      public_course_orders: {
+        Row: {
+          access_token_hash: string
+          activation_sent_count: number
+          advisor_session_id: string | null
+          cancelled_at: string | null
+          cart_id: string | null
+          checkout_provider: string
+          coupon_code_snapshot: string | null
+          coupon_id: string | null
+          coupon_snapshot: Json | null
+          created_at: string
+          currency: string
+          discount_minor: number
+          duration_days: number | null
+          environment: string | null
+          expired_at: string | null
+          expires_at: string
+          fingerprint: string
+          fulfilled_at: string | null
+          fulfillment_status: string
+          id: string
+          last_synced_at: string | null
+          learner_email: string
+          learner_user_id: string | null
+          link_attempts: number
+          link_email_sent_count: number
+          link_generation_error: string | null
+          link_locked_at: string | null
+          order_number: string
+          paid_amount_minor: number | null
+          paid_at: string | null
+          paid_tax_minor: number | null
+          payer_email: string | null
+          payer_name: string | null
+          payment_status: string
+          payment_transaction_id: string | null
+          refunded_amount_minor: number
+          source: string
+          status: string
+          status_reason: string | null
+          subtotal_minor: number
+          total_minor: number
+          updated_at: string
+          whop_account_id: string | null
+          whop_checkout_configuration_id: string | null
+          whop_checkout_url: string | null
+          whop_invoice_id: string | null
+          whop_payment_id: string | null
+          whop_plan_id: string | null
+          whop_product_id: string | null
+        }
+        Insert: {
+          access_token_hash: string
+          activation_sent_count?: number
+          advisor_session_id?: string | null
+          cancelled_at?: string | null
+          cart_id?: string | null
+          checkout_provider?: string
+          coupon_code_snapshot?: string | null
+          coupon_id?: string | null
+          coupon_snapshot?: Json | null
+          created_at?: string
+          currency: string
+          discount_minor?: number
+          duration_days?: number | null
+          environment?: string | null
+          expired_at?: string | null
+          expires_at: string
+          fingerprint: string
+          fulfilled_at?: string | null
+          fulfillment_status?: string
+          id?: string
+          last_synced_at?: string | null
+          learner_email: string
+          learner_user_id?: string | null
+          link_attempts?: number
+          link_email_sent_count?: number
+          link_generation_error?: string | null
+          link_locked_at?: string | null
+          order_number: string
+          paid_amount_minor?: number | null
+          paid_at?: string | null
+          paid_tax_minor?: number | null
+          payer_email?: string | null
+          payer_name?: string | null
+          payment_status?: string
+          payment_transaction_id?: string | null
+          refunded_amount_minor?: number
+          source?: string
+          status?: string
+          status_reason?: string | null
+          subtotal_minor: number
+          total_minor: number
+          updated_at?: string
+          whop_account_id?: string | null
+          whop_checkout_configuration_id?: string | null
+          whop_checkout_url?: string | null
+          whop_invoice_id?: string | null
+          whop_payment_id?: string | null
+          whop_plan_id?: string | null
+          whop_product_id?: string | null
+        }
+        Update: {
+          access_token_hash?: string
+          activation_sent_count?: number
+          advisor_session_id?: string | null
+          cancelled_at?: string | null
+          cart_id?: string | null
+          checkout_provider?: string
+          coupon_code_snapshot?: string | null
+          coupon_id?: string | null
+          coupon_snapshot?: Json | null
+          created_at?: string
+          currency?: string
+          discount_minor?: number
+          duration_days?: number | null
+          environment?: string | null
+          expired_at?: string | null
+          expires_at?: string
+          fingerprint?: string
+          fulfilled_at?: string | null
+          fulfillment_status?: string
+          id?: string
+          last_synced_at?: string | null
+          learner_email?: string
+          learner_user_id?: string | null
+          link_attempts?: number
+          link_email_sent_count?: number
+          link_generation_error?: string | null
+          link_locked_at?: string | null
+          order_number?: string
+          paid_amount_minor?: number | null
+          paid_at?: string | null
+          paid_tax_minor?: number | null
+          payer_email?: string | null
+          payer_name?: string | null
+          payment_status?: string
+          payment_transaction_id?: string | null
+          refunded_amount_minor?: number
+          source?: string
+          status?: string
+          status_reason?: string | null
+          subtotal_minor?: number
+          total_minor?: number
+          updated_at?: string
+          whop_account_id?: string | null
+          whop_checkout_configuration_id?: string | null
+          whop_checkout_url?: string | null
+          whop_invoice_id?: string | null
+          whop_payment_id?: string | null
+          whop_plan_id?: string | null
+          whop_product_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_course_orders_advisor_session_fk"
+            columns: ["advisor_session_id"]
+            isOneToOne: false
+            referencedRelation: "course_advisor_conversation_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "public_course_orders_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "public_carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "public_course_orders_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "public_course_orders_learner_user_id_fkey"
+            columns: ["learner_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "public_course_orders_payment_transaction_id_fkey"
+            columns: ["payment_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "payment_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       question_banks: {
         Row: {
@@ -6034,6 +6734,7 @@ export type Database = {
         Args: { p_question_ids: string[]; p_quiz: string }
         Returns: number
       }
+      course_advisor_analytics: { Args: { p_since: string }; Returns: Json }
       course_discussion_members: {
         Args: { p_course: string; p_limit?: number; p_search?: string }
         Returns: {
@@ -6054,6 +6755,10 @@ export type Database = {
           title: string
           verified_enrollment: boolean
         }[]
+      }
+      increment_coupon_redemption: {
+        Args: { p_coupon: string }
+        Returns: number
       }
       increment_coupon_redemptions: {
         Args: { p_whop_promo_code_id: string }
@@ -6096,6 +6801,7 @@ export type Database = {
         Args: { p_prefix?: string }
         Returns: string
       }
+      next_public_order_number: { Args: never; Returns: string }
       recalculate_enrollment_progress: {
         Args: { p_course: string; p_user: string }
         Returns: number

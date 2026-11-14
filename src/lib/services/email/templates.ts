@@ -139,6 +139,36 @@ export const TEMPLATE_VARIABLES: Record<string, TemplateVariable[]> = {
   "company.package_renewed": [FIRST_NAME, PACKAGE_NAME, ACCESS_SUMMARY],
   "company.access_expiring": [FIRST_NAME, PACKAGE_NAME, v("ends_at", "When access ends", "12 May 2027")],
   "company.access_expired": [FIRST_NAME, PACKAGE_NAME, v("ended_at", "When access ended", "12 May 2027")],
+  "order.payment_link": [
+    v("order_number", "Course package order number", "FMA-ORD-2026-001001"),
+    COURSE_LIST,
+    v("course_count", "Number of courses", "5"),
+    v("access_period", "Access period per course", "30 days"),
+    AMOUNT,
+    v("learner_email", "Student account email", "amira@example.com"),
+    v("link_expires_at", "When the payment link stops working", "18 Nov 2026, 09:12 UTC"),
+  ],
+  "order.payment_confirmed": [
+    FIRST_NAME,
+    v("order_number", "Course package order number", "FMA-ORD-2026-001001"),
+    COURSE_LIST,
+    v("access_summary", "Access period and end date", "30 days of access to each course, until 14 Dec 2026."),
+    v("learner_email", "Student account email", "amira@example.com"),
+    v("next_steps", "What happens next", "We've sent a separate email with a secure link to activate your account and create your password."),
+  ],
+  "order.account_activation": [
+    FIRST_NAME,
+    COURSE_LIST,
+    v("learner_email", "Student account email (their login)", "amira@example.com"),
+    v("access_summary", "Access period and end date", "30 days of access to each course, until 14 Dec 2026."),
+    v("expires_at", "When the activation link expires", "22 Nov 2026"),
+  ],
+  "order.courses_added": [
+    FIRST_NAME,
+    COURSE_LIST,
+    v("learner_email", "Student account email", "amira@example.com"),
+    v("access_summary", "Access period and end date", "30 days of access to each course, until 14 Dec 2026."),
+  ],
   "communication.contact_received": [
     v("lead_name", "Name from the contact form", "Amira Haddad"),
     v("lead_email", "Email from the contact form", "amira@example.com"),
@@ -153,6 +183,7 @@ export const SENSITIVE_LINK_TEMPLATES = new Set([
   "auth.password_reset",
   "auth.teacher_invitation",
   "invoice.account_activation",
+  "order.account_activation",
   "company.contact_invitation",
   "company.employee_invitation",
 ]);
@@ -164,6 +195,14 @@ export function variablesFor(key: string): TemplateVariable[] {
 export function samplePayload(key: string, appUrl: string): Record<string, unknown> {
   const payload: Record<string, unknown> = Object.fromEntries((TEMPLATE_VARIABLES[key] ?? [FIRST_NAME]).map((x) => [x.name, x.sample]));
   payload.cta_url = `${appUrl}/learn`;
+  if (key === "order.payment_link" || key === "order.payment_confirmed") {
+    payload.line_items = [
+      { description: "Amazon FBA Foundations", amount: "$20.00" },
+      { description: "Shopify Store Launch", amount: "$15.00" },
+      { description: "Discount (SAVE10)", amount: "−$3.50" },
+    ];
+    payload.total = "$31.50";
+  }
   if (key.startsWith("billing.payment") || key === "billing.receipt_available") {
     payload.line_items = [{ description: "Shopify Store Launch — 90 days of access", amount: "$49.00" }];
     payload.total = "$49.00";

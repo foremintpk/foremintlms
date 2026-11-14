@@ -275,6 +275,9 @@ export async function syncCouponToWhop(couponId: string): Promise<SyncResult> {
   const { data } = await admin.from("coupons").select("*").eq("id", couponId).single();
   const coupon = data as CouponRow | null;
   if (!coupon) throw new UserFacingError("Coupon not found.");
+  // Package-only codes are applied by Foremint before the order's exact price is sent
+  // to Whop; a Whop promo code would let buyers discount the same order twice.
+  if (coupon.applies_to === "packages") return { ok: true, message: "Course-package codes are applied by Foremint and aren't sent to Whop." };
   const { client, config } = await getWhopClient();
 
   try {

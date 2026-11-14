@@ -14,6 +14,8 @@ import {
   WhySection,
 } from "@/components/site/home/sections";
 import { JsonLd } from "@/components/site/primitives";
+import { LearningPlanCtaSection } from "@/components/commerce/learning-plan-cta";
+import { getSelectorCatalog } from "@/lib/services/commerce/catalog";
 import { appUrl } from "@/lib/env";
 import { sanitizeRichText } from "@/lib/sanitize";
 import { getPublicSettings } from "@/lib/settings";
@@ -41,7 +43,7 @@ export default async function HomePage() {
   const s = page.sections;
   const show = <K extends keyof typeof s>(key: K) => Boolean(s[key]?.visible);
 
-  const [categories, featured, instructors, testimonials, caseStudies, pricing, faqs, settings] = await Promise.all([
+  const [categories, featured, instructors, testimonials, caseStudies, pricing, faqs, settings, selector] = await Promise.all([
     getCategories(),
     show("featured_courses") ? getFeaturedCourses(s.featured_courses?.content.limit ?? 6) : Promise.resolve([]),
     show("instructors") ? getInstructors({ limit: 4 }) : Promise.resolve([]),
@@ -50,6 +52,7 @@ export default async function HomePage() {
     show("pricing") ? getPricingCatalog() : Promise.resolve({ memberships: [], bundles: [], coursesWithPlans: 0 }),
     show("faq") ? getFaqs({ homeOnly: true }) : Promise.resolve([]),
     getPublicSettings(),
+    getSelectorCatalog(),
   ]);
 
   const hero = s.hero?.visible ? s.hero.content : sectionSchemas.hero.parse({});
@@ -72,8 +75,14 @@ export default async function HomePage() {
           ...(sameAs.length ? { sameAs } : {}),
         }}
       />
-      <Hero content={hero} subjectCount={categories.length} />
+      <Hero
+        content={hero}
+        subjectCount={categories.length}
+        courseCount={categories.reduce((sum, c) => sum + c.courseCount, 0)}
+        topics={[...categories].sort((a, b) => b.courseCount - a.courseCount).map((c) => ({ slug: c.slug, name: c.name }))}
+      />
       {s.featured_courses?.visible ? <FeaturedCoursesSection content={s.featured_courses.content} courses={featured} /> : null}
+      <LearningPlanCtaSection catalog={selector} />
       {s.categories?.visible ? <CategoriesSection content={s.categories.content} categories={categories} /> : null}
       {s.why?.visible ? <WhySection content={s.why.content} /> : null}
       {s.how_it_works?.visible ? <HowItWorksSection content={s.how_it_works.content} /> : null}

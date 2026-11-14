@@ -313,6 +313,12 @@ export async function listCoupons(): Promise<CouponRow[]> {
   return (data ?? []) as CouponRow[];
 }
 
+/** Courses a course-package coupon can be limited to (published and paid). */
+export async function listCoursesForCouponSelect(): Promise<{ id: string; title: string }[]> {
+  const { data } = await db().from("courses").select("id, title").eq("status", "published").eq("is_free", false).order("title");
+  return (data ?? []) as { id: string; title: string }[];
+}
+
 export async function listPaidPlansForSelect() {
   const { data } = await db().from("pricing_plans").select("id, name, plan_type, product_id, whop_plan_id, visibility").neq("plan_type", "free").neq("visibility", "archived");
   const rows = (data ?? []) as Pick<PlanRow, "id" | "name" | "plan_type" | "product_id" | "whop_plan_id" | "visibility">[];

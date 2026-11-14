@@ -13,6 +13,7 @@ import { issuePendingCertificates } from "@/lib/services/certificates";
 import { syncProcessingVideos } from "@/lib/services/video/sync";
 import { getSetting } from "@/lib/settings";
 import { runInvoicingMaintenance } from "@/lib/services/invoicing/maintenance";
+import { runCommerceMaintenance } from "@/lib/services/commerce/maintenance";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -42,6 +43,9 @@ const JOBS: Record<string, () => Promise<unknown>> = {
   // custom invoices: payment reminders, past-due, link expiry, package expiry,
   // open-invoice and subscription reconciliation with Whop
   "invoicing": () => runInvoicingMaintenance(),
+  // course packages (selector / advisor): missed-webhook reconciliation, link
+  // expiry, fulfilment retries, advisor log retention, old carts
+  "commerce": () => runCommerceMaintenance(),
   "access-expiry-reminders": async () => remindExpiringEntitlements(await getSetting<number>("learning.access_expiry_reminder_days", 7)),
   "payment-reconciliation": async () => {
     // Catch-up: anything still missing from Whop (or whose sync failed) is pushed first.

@@ -9,6 +9,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { formatDate } from "@/lib/format";
 import { courseListText, type CourseSnapshotItem } from "@/lib/domain/invoicing";
 import { accessInvitationState, findAccessInvitationByToken } from "@/lib/services/invoicing/invitations";
+import { courseTitlesText, orderAccessSummary } from "@/lib/domain/commerce";
+import { loadOrder, loadOrderItems } from "@/lib/services/commerce/store";
 
 export const instant = false;
 
@@ -41,8 +43,9 @@ export default async function JoinPage({ params }: PageProps<"/join/[token]">) {
   }
 
   const admin = createAdminClient();
-  const isPurchase = invitation.kind === "purchase_activation";
-  const [{ data: company }, { data: invoice }, user, { data: existing }] = await Promise.all([
+  const isOrder = invitation.kind === "order_activation";
+  const isPurchase = invitation.kind === "purchase_activation" || isOrder;
+  const [{ data: company }, { data: invoice }, user, { data: existing }, order, orderItems] = await Promise.all([
     invitation.company_id ? admin.from("companies").select("name").eq("id", invitation.company_id).maybeSingle() : Promise.resolve({ data: null }),
     invitation.invoice_id
       ? admin.from("custom_invoices").select("invoice_description, selected_course_snapshot, includes_future_courses").eq("id", invitation.invoice_id).maybeSingle()
@@ -58,8 +61,14 @@ export default async function JoinPage({ params }: PageProps<"/join/[token]">) {
         : Promise.resolve({ data: null }),
     getSessionUser(),
     admin.from("profile_private").select("user_id").eq("email", invitation.email).maybeSingle(),
+    isOrder && invitation.public_order_id ? loadOrder(invitation.public_order_id) : Promise.resolve(null),
+    isOrder && invitation.public_order_id ? loadOrderItems(invitation.public_order_id) : Promise.resolve([]),
   ]);
-  const courses = invoice ? courseListText((invoice.selected_course_snapshot as unknown as CourseSnapshotItem[]) ?? [], invoice.includes_future_courses, 8) : null;
+  const courses = isOrder
+    ? courseTitlesText(orderItems.map((i) => i.course_title_snapshot), 8)
+    : invoice
+      ? courseListText((invoice.selected_course_snapshot as unknown as CourseSnapshotItem[]) ?? [], invoice.includes_future_courses, 8)
+      : null;
   const heading = isPurchase ? "Your courses are ready" : `Join ${company?.name ?? "your company"}`;
   const cta = isPurchase ? "Activate my courses" : "Join company";
 
@@ -71,8 +80,9 @@ export default async function JoinPage({ params }: PageProps<"/join/[token]">) {
           {company?.name}
         </p>
       ) : (
-        <p className="font-medium">{invoice?.invoice_description}</p>
+        <p className="font-medium">{isOrder ? `Course package ${order?.order_number ?? ""}` : invoice?.invoice_description}</p>
       )}
+      {isOrder && order ? <p className="text-muted-foreground">{orderAccessSummary(order.duration_days, order.paid_at ? new Date(order.paid_at) : null)}</p> : null}
       {courses ? (
         <p className="text-muted-foreground">
           <span className="font-medium text-foreground">Courses:</span> {courses}

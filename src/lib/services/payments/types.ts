@@ -65,6 +65,12 @@ export interface CouponRow {
   expires_at: string | null;
   plan_ids: string[];
   new_customers_only: boolean;
+  /** plans = Whop promo code at plan checkout; packages = applied by Foremint to course packages (never synced); all = both. */
+  applies_to: "all" | "plans" | "packages";
+  /** Course packages only: courses the discount applies to (empty = all). */
+  course_ids: string[];
+  min_subtotal_cents: number | null;
+  max_redemptions_per_customer: number | null;
   status: "active" | "disabled" | "archived";
   whop_promo_code_id: string | null;
   whop_synced_at: string | null;

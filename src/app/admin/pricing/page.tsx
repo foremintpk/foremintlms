@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, Layers, Package } from "lucide-react";
+import { ArrowRight, Layers, Package, ShoppingBag } from "lucide-react";
 import { PageHeader, SectionHeader } from "@/components/app-shell/page-header";
 import { ListToolbar } from "@/components/common/list-toolbar";
 import { StatusBadge } from "@/components/common/status-badge";
@@ -39,9 +39,14 @@ export default async function AdminPricingPage({ searchParams }: PageProps<"/adm
         title="Pricing & plans"
         description="Each course is sold through a product with one or more plans: one-time access, lifetime, or a subscription. Paid plans are sold through Whop."
         actions={
-          <Link href="/admin/bundles" className={buttonVariants({ variant: "outline" })}>
-            <Layers className="size-4" /> Bundles & memberships
-          </Link>
+          <>
+            <Link href="/admin/pricing/public" className={buttonVariants({ variant: "outline" })}>
+              <ShoppingBag className="size-4" /> Public course pricing
+            </Link>
+            <Link href="/admin/bundles" className={buttonVariants({ variant: "outline" })}>
+              <Layers className="size-4" /> Bundles & memberships
+            </Link>
+          </>
         }
       />
       <WhopStatusBanner />

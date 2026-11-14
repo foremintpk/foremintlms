@@ -118,20 +118,20 @@ export function CookieConsent({ gaMeasurementId, plausibleDomain }: { gaMeasurem
               </Link>
             </p>
             <div className="flex shrink-0 flex-wrap gap-2">
-              <Button variant="outline" className="h-10 rounded-xl" onClick={openPreferences}>
+              <Button variant="outline" className="h-10" onClick={openPreferences}>
                 Preferences
               </Button>
               {hasAnalyticsTools ? (
                 <>
-                  <Button variant="outline" className="h-10 rounded-xl" onClick={() => writeConsent(false)}>
+                  <Button variant="outline" className="h-10" onClick={() => writeConsent(false)}>
                     Essential only
                   </Button>
-                  <Button className="h-10 rounded-xl" onClick={() => writeConsent(true)}>
+                  <Button className="h-10" onClick={() => writeConsent(true)}>
                     Accept analytics
                   </Button>
                 </>
               ) : (
-                <Button className="h-10 rounded-xl" onClick={() => writeConsent(false)}>
+                <Button className="h-10" onClick={() => writeConsent(false)}>
                   Got it
                 </Button>
               )}

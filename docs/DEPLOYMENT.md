@@ -49,6 +49,7 @@ Integration credentials can alternatively be entered in **Admin → Integrations
    | live-reminders | every 10 min |
    | scheduled-publishing, webhook-retries, video-sync | every 15 min |
    | entitlement-expiry, assignment-reminders, live-artifacts, certificates | hourly |
+   | commerce (course-package link expiry, missed-webhook checks, advisor log retention) | hourly is ideal; daily via vercel.json works |
 
    ```sql
    select cron.schedule('foremint-email-outbox', '*/5 * * * *', $$

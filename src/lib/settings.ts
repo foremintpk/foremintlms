@@ -37,6 +37,14 @@ export async function getSetting<T>(key: string, fallback: T): Promise<T> {
   return value as T;
 }
 
+/** A setting flagged public, read without the secret key (safe on public, prerendered pages). */
+export async function getPublicSetting<T>(key: string, fallback: T): Promise<T> {
+  const rows = await loadPublicSettingsRows();
+  const value = rows[key];
+  if (value === undefined || value === null || value === "") return fallback;
+  return value as T;
+}
+
 export async function getAdminMfaRequired(): Promise<boolean> {
   return getSetting<boolean>("security.require_admin_mfa", true);
 }

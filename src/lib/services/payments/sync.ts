@@ -22,6 +22,7 @@ import {
 } from "./mapping";
 import type { WhopLineLike } from "@/lib/services/billing/receipt-model";
 import { paymentsRpc } from "./rpc";
+import { applyOrderPayment, findOrderForPayment } from "@/lib/services/commerce/fulfillment";
 import {
   applyCustomInvoiceMembership,
   applyCustomInvoicePayment,
@@ -194,6 +195,11 @@ export async function syncPaymentFromWhop(whopPaymentId: string): Promise<Paymen
 }
 
 async function applyPayment(p: Whop.Payment): Promise<PaymentSyncResult> {
+  // Course-package orders from the public selector / advisor (guest checkout,
+  // one hidden single-use variant per order) have their own fulfilment.
+  const publicOrder = await findOrderForPayment(p);
+  if (publicOrder) return applyOrderPayment(p, publicOrder);
+
   // Custom invoices (and renewals of the subscriptions they start) have their
   // own fulfilment: company packages, account activation, invoice statuses.
   const customInvoice = await findInvoiceForPayment(p);
