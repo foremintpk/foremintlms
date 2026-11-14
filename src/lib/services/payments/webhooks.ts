@@ -1,9 +1,9 @@
 import "server-only";
 import { unwrapWebhook, WebhookVerificationError } from "@whop/sdk/helpers";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { IntegrationNotConfiguredError } from "@/lib/services/integrations";
+import { getWhopWebhookSecrets, IntegrationNotConfiguredError } from "@/lib/services/integrations";
+import { checkRateLimit } from "@/lib/security/rate-limit";
 import type { Json } from "@/types/database";
-import { getWhopConfig } from "./whop";
 import { classifyWhopEvent, eventTarget, nextRetryDelayMs } from "./mapping";
 import { syncMembershipFromWhop, syncPaymentFromWhop } from "./sync";
 import type { WebhookEventRow } from "./types";
@@ -34,26 +34,63 @@ function lowerHeaders(headers: Headers): Record<string, string> {
   return out;
 }
 
-export async function receiveWhopWebhook(rawBody: string, headers: Headers): Promise<WebhookOutcome> {
-  let secret: string | undefined;
+type WhopEvent = { id?: string; type?: string; data?: unknown; account_id?: string | null };
+
+/**
+ * Keep a record of a rejected delivery so the cause is visible in Admin →
+ * Payments → Webhook events. Never stores the payload or any secret — only
+ * the verifier's reason, header presence, clock skew and the length/prefix
+ * of each secret tried. Rate-limited so junk requests can't flood the table.
+ */
+async function recordRejectedDelivery(h: Record<string, string>, reason: string, secrets: { source: string; secret: string }[], bodyBytes: number) {
   try {
-    secret = (await getWhopConfig()).webhookSecret;
+    if (!(await checkRateLimit("whop-webhook-rejected", 30, 600))) return;
+    const ts = Number(h["webhook-timestamp"]);
+    const diagnostics = {
+      reason,
+      secretsTried: secrets.map((s) => ({ source: s.source, length: s.secret.length, prefix: s.secret.slice(0, 3) })),
+      headers: { id: Boolean(h["webhook-id"]), timestamp: Boolean(h["webhook-timestamp"]), signature: Boolean(h["webhook-signature"]) },
+      clockSkewSeconds: Number.isFinite(ts) ? Math.round(Date.now() / 1000 - ts) : null,
+      bodyBytes,
+    };
+    await createAdminClient()
+      .from("webhook_events")
+      .insert({
+        provider: "whop",
+        event_id: `rejected:${(h["webhook-id"] || crypto.randomUUID()).slice(0, 120)}:${Date.now()}`,
+        event_type: "signature_rejected",
+        payload: diagnostics as unknown as Json,
+        status: "ignored",
+        attempts: 1,
+        last_error: `Signature check failed: ${reason}`.slice(0, 500),
+      });
   } catch (err) {
-    if (!(err instanceof IntegrationNotConfiguredError)) throw err;
+    console.error("[whop-webhook] could not record rejected delivery", err);
   }
-  if (!secret) {
+}
+
+export async function receiveWhopWebhook(rawBody: string, headers: Headers): Promise<WebhookOutcome> {
+  const secrets = await getWhopWebhookSecrets();
+  if (secrets.length === 0) {
     return { status: 503, body: { error: "Whop webhooks are not configured on this site yet." } };
   }
 
   const h = lowerHeaders(headers);
-  let event: { id?: string; type?: string; data?: unknown; account_id?: string | null };
-  try {
-    event = unwrapWebhook(rawBody, { headers: h, key: secret });
-  } catch (err) {
-    if (err instanceof WebhookVerificationError || err instanceof Error) {
-      return { status: 400, body: { error: "Invalid webhook signature." } };
+  let event: WhopEvent | null = null;
+  let reason = "unknown";
+  for (const { secret } of secrets) {
+    try {
+      event = unwrapWebhook(rawBody, { headers: h, key: secret }) as WhopEvent;
+      break;
+    } catch (err) {
+      if (!(err instanceof WebhookVerificationError || err instanceof Error)) throw err;
+      reason = err.message || err.name;
     }
-    throw err;
+  }
+  if (!event) {
+    console.error(`[whop-webhook] signature rejected: ${reason}`);
+    await recordRejectedDelivery(h, reason, secrets, Buffer.byteLength(rawBody));
+    return { status: 400, body: { error: "Invalid webhook signature." } };
   }
 
   const eventId = h["webhook-id"] || event.id;

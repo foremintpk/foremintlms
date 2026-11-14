@@ -129,9 +129,13 @@ function eventsTable() {
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({ from: (table: string) => (table === "webhook_events" ? eventsTable() : eventsTable()) }),
 }));
-vi.mock("@/lib/services/payments/whop", () => ({
-  getWhopConfig: async () => ({ apiKey: "k", companyId: "biz_1", webhookSecret: SECRET, environment: "sandbox" }),
+type SecretSource = { source: "environment" | "settings"; secret: string };
+const secrets = vi.fn(async (): Promise<SecretSource[]> => [{ source: "settings", secret: SECRET }]);
+vi.mock("@/lib/services/integrations", () => ({
+  getWhopWebhookSecrets: () => secrets(),
+  IntegrationNotConfiguredError: class IntegrationNotConfiguredError extends Error {},
 }));
+vi.mock("@/lib/security/rate-limit", () => ({ checkRateLimit: async () => true }));
 vi.mock("@/lib/services/payments/sync", () => ({
   syncPaymentFromWhop: (id: string) => syncPayment(id),
   syncMembershipFromWhop: (id: string) => syncMembership(id),
@@ -140,6 +144,7 @@ vi.mock("@/lib/services/payments/sync", () => ({
 describe("webhook intake", () => {
   beforeEach(() => {
     store.events = [];
+    secrets.mockImplementation(async () => [{ source: "settings" as const, secret: SECRET }]);
     syncPayment.mockReset();
     syncPayment.mockImplementation(async () => ({}));
     syncMembership.mockReset();
@@ -151,11 +156,34 @@ describe("webhook intake", () => {
     return receiveWhopWebhook(raw, new Headers(sign(id, now(), raw)));
   }
 
-  it("rejects an invalid signature without storing anything", async () => {
+  it("rejects an invalid signature and records only a diagnostic (no payload, no secret)", async () => {
     const { receiveWhopWebhook } = await import("@/lib/services/payments/webhooks");
     const res = await receiveWhopWebhook(body, new Headers({ ...sign("msg_x", now(), body), "webhook-signature": "v1,bad" }));
     expect(res.status).toBe(400);
-    expect(store.events).toHaveLength(0);
+    expect(syncPayment).not.toHaveBeenCalled();
+    expect(store.events).toHaveLength(1);
+    expect(store.events[0]).toMatchObject({ event_type: "signature_rejected", status: "ignored" });
+    const recorded = JSON.stringify(store.events[0]);
+    expect(recorded).not.toContain(SECRET);
+    expect(recorded).not.toContain("pay_1");
+    expect(store.events[0].payload).toMatchObject({ secretsTried: [{ source: "settings", length: SECRET.length, prefix: "ws_" }] });
+  });
+
+  it("answers 503 when no webhook secret is configured", async () => {
+    secrets.mockImplementation(async () => []);
+    const { receiveWhopWebhook } = await import("@/lib/services/payments/webhooks");
+    const res = await receiveWhopWebhook(body, new Headers(sign("msg_y", now(), body)));
+    expect(res.status).toBe(503);
+  });
+
+  it("accepts the saved secret even when a stale environment secret is also set", async () => {
+    secrets.mockImplementation(async () => [
+      { source: "environment" as const, secret: "ws_stale_value" },
+      { source: "settings" as const, secret: SECRET },
+    ]);
+    const res = await deliver("msg_z", { id: "evt_z", type: "payment.succeeded", data: { id: "pay_1" } });
+    expect(res.status).toBe(200);
+    expect(syncPayment).toHaveBeenCalledWith("pay_1");
   });
 
   it("re-fetches the payment and marks the event processed", async () => {

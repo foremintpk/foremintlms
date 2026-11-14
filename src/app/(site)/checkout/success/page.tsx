@@ -6,6 +6,8 @@ import { CheckoutStatusPoller } from "@/components/billing/checkout-status-polle
 import { requireUser } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { checkRateLimit } from "@/lib/security/rate-limit";
+import { confirmCheckoutFromWhop } from "@/lib/services/payments/checkout";
 
 // Reads the session and the learner's own checkout: render per request.
 export const instant = false;
@@ -25,7 +27,7 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps<"/
   // RLS: a learner can only read their own checkout sessions.
   const supabase = await createClient();
   const { data: session } = /^[0-9a-f-]{36}$/i.test(sessionId)
-    ? await supabase.from("checkout_sessions").select("id, status, product_id, metadata, created_at").eq("id", sessionId).maybeSingle()
+    ? await supabase.from("checkout_sessions").select("id, status, product_id, plan_id, whop_checkout_id, metadata, created_at").eq("id", sessionId).maybeSingle()
     : { data: null };
 
   let productName: string | null = null;
@@ -44,6 +46,24 @@ export default async function CheckoutSuccessPage({ searchParams }: PageProps<"/
     ]);
     productName = (product?.name as string | undefined) ?? null;
     hasAccess = (count ?? 0) > 0 || session.status === "completed";
+    // Still waiting: ask Whop directly (at most every few seconds per checkout)
+    // instead of relying on the webhook alone.
+    if (!hasAccess && session.status !== "failed" && (await checkRateLimit(`checkout-confirm:${session.id}`, 1, 8))) {
+      try {
+        if (await confirmCheckoutFromWhop(session)) {
+          const { data: refreshed } = await admin.from("checkout_sessions").select("status").eq("id", session.id).maybeSingle();
+          const { count: granted } = await admin
+            .from("course_entitlements")
+            .select("id", { count: "exact", head: true })
+            .eq("checkout_session_id", session.id)
+            .eq("user_id", user.id)
+            .eq("status", "active");
+          hasAccess = (granted ?? 0) > 0 || refreshed?.status === "completed";
+        }
+      } catch (err) {
+        console.error("[checkout] direct confirmation failed", err);
+      }
+    }
     const courseIds = ((session.metadata as { course_ids?: string[] } | null)?.course_ids ?? []).filter(Boolean);
     if (courseIds.length) {
       const { data: course } = await admin.from("courses").select("slug").in("id", courseIds).eq("status", "published").limit(1).maybeSingle();

@@ -8,6 +8,7 @@ import type { SessionUser } from "@/lib/auth/session";
 import type { Json } from "@/types/database";
 import { describeWhopError, getWhopClient, isWhopReady } from "./whop";
 import { productCourseIds, syncPlanToWhop } from "./catalog";
+import { applyPaymentObject } from "./sync";
 import type { PlanRow, ProductRow } from "./types";
 
 export type CheckoutUnavailableReason =
@@ -171,4 +172,41 @@ export async function startCheckout(user: SessionUser, planId: string): Promise<
       .eq("id", session.id);
     return { kind: "unavailable", reason: "provider_error" };
   }
+}
+
+/**
+ * Ask Whop directly whether this checkout has been paid and apply the
+ * payment if so. Backs up the webhook: the confirmation page calls it while
+ * the learner waits, so access unlocks even when a webhook is delayed or
+ * misconfigured. The payment is verified with Whop's API (never the browser)
+ * and applied through the same path as the webhook, so it is idempotent.
+ */
+export async function confirmCheckoutFromWhop(session: {
+  id: string;
+  plan_id: string;
+  whop_checkout_id: string | null;
+  created_at: string;
+}): Promise<boolean> {
+  if (!session.whop_checkout_id || !(await isWhopReady())) return false;
+  const admin = createAdminClient();
+  const { data: plan } = await admin.from("pricing_plans").select("whop_plan_id").eq("id", session.plan_id).maybeSingle();
+  const { client, config } = await getWhopClient();
+  const since = new Date(new Date(session.created_at).getTime() - 60_000).toISOString();
+  const page = await client.payments.list({
+    account_id: config.companyId,
+    created_after: since,
+    first: 25,
+    ...(plan?.whop_plan_id ? { variant_ids: plan.whop_plan_id } : {}),
+  });
+  let applied = false;
+  let seen = 0;
+  for await (const payment of page) {
+    if (++seen > 25) break;
+    const meta = (payment.metadata ?? {}) as Record<string, unknown>;
+    if (payment.checkout_configuration_id === session.whop_checkout_id || meta.checkout_session_id === session.id) {
+      await applyPaymentObject(payment);
+      applied = true;
+    }
+  }
+  return applied;
 }

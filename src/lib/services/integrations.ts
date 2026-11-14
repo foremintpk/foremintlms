@@ -71,6 +71,21 @@ function pick(...values: (string | undefined | null | unknown)[]): string | unde
   return undefined;
 }
 
+/**
+ * Every configured Whop webhook signing secret, with where it came from.
+ * Normally there is one; if both an environment variable and a saved
+ * setting exist and differ, both are tried so a stale value can't block
+ * deliveries.
+ */
+export async function getWhopWebhookSecrets(): Promise<{ source: "environment" | "settings"; secret: string }[]> {
+  const fromEnv = serverEnv().WHOP_WEBHOOK_SECRET?.trim();
+  const fromSettings = (await loadStored()).whop?.secrets.webhookSecret?.trim();
+  const out: { source: "environment" | "settings"; secret: string }[] = [];
+  if (fromEnv) out.push({ source: "environment", secret: fromEnv });
+  if (fromSettings && fromSettings !== fromEnv) out.push({ source: "settings", secret: fromSettings });
+  return out;
+}
+
 export async function getIntegration<K extends IntegrationProvider>(provider: K): Promise<IntegrationValues[K]> {
   const env = serverEnv();
   const stored = (await loadStored())[provider] ?? { config: {}, secrets: {} };
