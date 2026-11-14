@@ -22,6 +22,12 @@ import {
 } from "./mapping";
 import type { WhopLineLike } from "@/lib/services/billing/receipt-model";
 import { paymentsRpc } from "./rpc";
+import {
+  applyCustomInvoiceMembership,
+  applyCustomInvoicePayment,
+  findInvoiceForMembership,
+  findInvoiceForPayment,
+} from "@/lib/services/invoicing/fulfillment";
 import type {
   CheckoutSessionRow,
   PaymentTransactionRow,
@@ -188,6 +194,11 @@ export async function syncPaymentFromWhop(whopPaymentId: string): Promise<Paymen
 }
 
 async function applyPayment(p: Whop.Payment): Promise<PaymentSyncResult> {
+  // Custom invoices (and renewals of the subscriptions they start) have their
+  // own fulfilment: company packages, account activation, invoice statuses.
+  const customInvoice = await findInvoiceForPayment(p);
+  if (customInvoice) return applyCustomInvoicePayment(p, customInvoice);
+
   const admin = db();
   const { data: existingRow } = await admin.from("payment_transactions").select("*").eq("whop_payment_id", p.id).maybeSingle();
   const existing = existingRow as PaymentTransactionRow | null;
@@ -481,6 +492,12 @@ export async function syncMembershipFromWhop(
 }
 
 async function applyMembership(m: Whop.Membership, knownUserId: string | null): Promise<SubscriptionRecordRow | null> {
+  const customInvoice = await findInvoiceForMembership(m);
+  if (customInvoice) {
+    await applyCustomInvoiceMembership(m, customInvoice);
+    return null;
+  }
+
   const admin = db();
   const { data: existingRow } = await admin.from("subscription_records").select("*").eq("whop_membership_id", m.id).maybeSingle();
   const existing = existingRow as SubscriptionRecordRow | null;

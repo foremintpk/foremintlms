@@ -20,11 +20,12 @@ import {
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { AREA_HOME, AREA_LABEL, NAV, type NavItem, type ShellArea } from "./nav-config";
+import { AREA_HOME, AREA_LABEL, NAV, type NavFeature, type NavItem, type ShellArea } from "./nav-config";
 import type { ShellBadges } from "./types";
 
 function isActive(pathname: string, item: NavItem) {
   if (item.exact) return pathname === item.href;
+  if (item.excludePrefixes?.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return false;
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
@@ -34,11 +35,14 @@ function NavItemIcon({ icon: Icon }: { icon: NavItem["icon"] }) {
   return pending ? <Spinner aria-hidden className="text-primary" /> : <Icon />;
 }
 
-function NavMenu({ area, badges, pathname }: { area: ShellArea; badges: ShellBadges; pathname: string | null }) {
+function NavMenu({ area, badges, pathname, features }: { area: ShellArea; badges: ShellBadges; pathname: string | null; features: NavFeature[] }) {
   const { setOpenMobile, isMobile } = useSidebar();
+  const groups = NAV[area]
+    .map((group) => ({ ...group, items: group.items.filter((item) => !item.feature || features.includes(item.feature)) }))
+    .filter((group) => group.items.length > 0);
   return (
     <>
-      {NAV[area].map((group, gi) => (
+      {groups.map((group, gi) => (
         <SidebarGroup key={group.label ?? `group-${gi}`}>
           {group.label ? <SidebarGroupLabel>{group.label}</SidebarGroupLabel> : null}
           <SidebarGroupContent>
@@ -77,12 +81,12 @@ function NavMenu({ area, badges, pathname }: { area: ShellArea; badges: ShellBad
   );
 }
 
-function ActiveNavMenu(props: { area: ShellArea; badges: ShellBadges }) {
+function ActiveNavMenu(props: { area: ShellArea; badges: ShellBadges; features: NavFeature[] }) {
   const pathname = usePathname();
   return <NavMenu {...props} pathname={pathname} />;
 }
 
-export function AppSidebar({ area, badges }: { area: ShellArea; badges: ShellBadges }) {
+export function AppSidebar({ area, badges, features = [] }: { area: ShellArea; badges: ShellBadges; features?: NavFeature[] }) {
   return (
     <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader className="pb-3">
@@ -103,8 +107,8 @@ export function AppSidebar({ area, badges }: { area: ShellArea; badges: ShellBad
       </SidebarHeader>
       <SidebarContent>
         {/* usePathname suspends while the static shell renders; show the menu without an active item meanwhile. */}
-        <Suspense fallback={<NavMenu area={area} badges={badges} pathname={null} />}>
-          <ActiveNavMenu area={area} badges={badges} />
+        <Suspense fallback={<NavMenu area={area} badges={badges} pathname={null} features={features} />}>
+          <ActiveNavMenu area={area} badges={badges} features={features} />
         </Suspense>
       </SidebarContent>
       <SidebarFooter className="group-data-[collapsible=icon]:hidden">

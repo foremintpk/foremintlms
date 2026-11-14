@@ -17,6 +17,111 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          can_invite_members: boolean
+          company_id: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          full_name: string | null
+          id: string
+          invited_by: string | null
+          invited_by_role: string
+          invoice_id: string | null
+          kind: string
+          last_sent_at: string
+          revoked_at: string | null
+          revoked_by: string | null
+          send_count: number
+          status: string
+          token_hash: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          can_invite_members?: boolean
+          company_id?: string | null
+          created_at?: string
+          email: string
+          expires_at: string
+          full_name?: string | null
+          id?: string
+          invited_by?: string | null
+          invited_by_role?: string
+          invoice_id?: string | null
+          kind: string
+          last_sent_at?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          send_count?: number
+          status?: string
+          token_hash: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          can_invite_members?: boolean
+          company_id?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          full_name?: string | null
+          id?: string
+          invited_by?: string | null
+          invited_by_role?: string
+          invoice_id?: string | null
+          kind?: string
+          last_sent_at?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          send_count?: number
+          status?: string
+          token_hash?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_invitations_accepted_by_fkey"
+            columns: ["accepted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "access_invitations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "access_invitations_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "access_invitations_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "custom_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "access_invitations_revoked_by_fkey"
+            columns: ["revoked_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       account_invitations: {
         Row: {
           accepted_at: string | null
@@ -1038,6 +1143,219 @@ export type Database = {
           },
         ]
       }
+      companies: {
+        Row: {
+          access_status: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          internal_notes: string | null
+          name: string
+          primary_contact_email: string
+          primary_contact_name: string | null
+          primary_contact_phone: string | null
+          primary_contact_user_id: string | null
+          seat_limit: number | null
+          services_description: string | null
+          status: string
+          suspended_at: string | null
+          suspended_reason: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_status?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          internal_notes?: string | null
+          name: string
+          primary_contact_email: string
+          primary_contact_name?: string | null
+          primary_contact_phone?: string | null
+          primary_contact_user_id?: string | null
+          seat_limit?: number | null
+          services_description?: string | null
+          status?: string
+          suspended_at?: string | null
+          suspended_reason?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_status?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          internal_notes?: string | null
+          name?: string
+          primary_contact_email?: string
+          primary_contact_name?: string | null
+          primary_contact_phone?: string | null
+          primary_contact_user_id?: string | null
+          seat_limit?: number | null
+          services_description?: string | null
+          status?: string
+          suspended_at?: string | null
+          suspended_reason?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "companies_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "companies_primary_contact_user_id_fkey"
+            columns: ["primary_contact_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_access_audit_logs: {
+        Row: {
+          action: string
+          affected_user_id: string | null
+          company_id: string
+          created_at: string
+          id: string
+          new_values: Json
+          performed_by: string | null
+          performer_role: string
+          previous_values: Json
+          reason: string | null
+        }
+        Insert: {
+          action: string
+          affected_user_id?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          new_values?: Json
+          performed_by?: string | null
+          performer_role?: string
+          previous_values?: Json
+          reason?: string | null
+        }
+        Update: {
+          action?: string
+          affected_user_id?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          new_values?: Json
+          performed_by?: string | null
+          performer_role?: string
+          previous_values?: Json
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_access_audit_logs_affected_user_id_fkey"
+            columns: ["affected_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_access_audit_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_access_audit_logs_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_members: {
+        Row: {
+          can_invite_members: boolean
+          can_view_billing: boolean
+          company_id: string
+          created_at: string
+          id: string
+          invitation_id: string | null
+          joined_at: string
+          membership_status: string
+          removal_reason: string | null
+          removed_at: string | null
+          removed_by: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          can_invite_members?: boolean
+          can_view_billing?: boolean
+          company_id: string
+          created_at?: string
+          id?: string
+          invitation_id?: string | null
+          joined_at?: string
+          membership_status?: string
+          removal_reason?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          can_invite_members?: boolean
+          can_view_billing?: boolean
+          company_id?: string
+          created_at?: string
+          id?: string
+          invitation_id?: string | null
+          joined_at?: string
+          membership_status?: string
+          removal_reason?: string | null
+          removed_at?: string | null
+          removed_by?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_members_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_members_invitation_fk"
+            columns: ["invitation_id"]
+            isOneToOne: false
+            referencedRelation: "access_invitations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_members_removed_by_fkey"
+            columns: ["removed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_reports: {
         Row: {
           course_id: string | null
@@ -1442,6 +1760,7 @@ export type Database = {
           grant_reason: string | null
           granted_by: string | null
           id: string
+          invoice_entitlement_id: string | null
           payment_transaction_id: string | null
           pricing_plan_id: string | null
           product_id: string | null
@@ -1467,6 +1786,7 @@ export type Database = {
           grant_reason?: string | null
           granted_by?: string | null
           id?: string
+          invoice_entitlement_id?: string | null
           payment_transaction_id?: string | null
           pricing_plan_id?: string | null
           product_id?: string | null
@@ -1492,6 +1812,7 @@ export type Database = {
           grant_reason?: string | null
           granted_by?: string | null
           id?: string
+          invoice_entitlement_id?: string | null
           payment_transaction_id?: string | null
           pricing_plan_id?: string | null
           product_id?: string | null
@@ -1534,6 +1855,13 @@ export type Database = {
             columns: ["granted_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_entitlements_invoice_entitlement_id_fkey"
+            columns: ["invoice_entitlement_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_entitlements"
             referencedColumns: ["id"]
           },
           {
@@ -1890,6 +2218,269 @@ export type Database = {
             columns: ["submitted_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_invoice_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          dedupe_key: string | null
+          event_data: Json
+          event_type: string
+          id: string
+          invoice_id: string
+          new_status: string | null
+          old_status: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          event_data?: Json
+          event_type: string
+          id?: string
+          invoice_id: string
+          new_status?: string | null
+          old_status?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          event_data?: Json
+          event_type?: string
+          id?: string
+          invoice_id?: string
+          new_status?: string | null
+          old_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_invoice_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_invoice_events_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "custom_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_invoices: {
+        Row: {
+          access_duration_days: number | null
+          access_end_at: string | null
+          access_mode: string | null
+          allow_contact_invites: boolean
+          amount_minor: number
+          billing_cycles: number | null
+          billing_interval_days: number | null
+          billing_type: string
+          collection_method: string
+          cancelled_at: string | null
+          company_description: string | null
+          company_id: string | null
+          company_name: string | null
+          company_services: string | null
+          course_ids: string[]
+          course_selection_mode: string
+          created_at: string
+          created_by: string | null
+          currency: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          customer_reference: string | null
+          customer_user_id: string | null
+          due_at: string | null
+          email_send_count: number
+          generation_attempts: number
+          generation_error: string | null
+          generation_locked_at: string | null
+          grace_period_days: number
+          id: string
+          includes_future_courses: boolean
+          internal_notes: string | null
+          internal_reference: string | null
+          invoice_description: string
+          invoice_number: string
+          invoice_type: string
+          last_email_sent_at: string | null
+          last_synced_at: string | null
+          link_expires_at: string | null
+          paid_amount_minor: number | null
+          paid_at: string | null
+          paid_tax_minor: number | null
+          past_due_notified_at: string | null
+          refunded_amount_minor: number
+          reminder_sent_at: string | null
+          revision_of: string | null
+          seat_limit: number | null
+          selected_course_snapshot: Json
+          service_summary_generated_at: string | null
+          service_summary_storage_path: string | null
+          service_summary_version: number
+          snapshot_taken_at: string
+          status: string
+          status_reason: string | null
+          updated_at: string
+          upfront_fee_minor: number
+          voided_at: string | null
+        }
+        Insert: {
+          access_duration_days?: number | null
+          access_end_at?: string | null
+          access_mode?: string | null
+          allow_contact_invites?: boolean
+          amount_minor: number
+          billing_cycles?: number | null
+          billing_interval_days?: number | null
+          billing_type: string
+          collection_method?: string
+          cancelled_at?: string | null
+          company_description?: string | null
+          company_id?: string | null
+          company_name?: string | null
+          company_services?: string | null
+          course_ids?: string[]
+          course_selection_mode: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_email: string
+          customer_name: string
+          customer_phone?: string | null
+          customer_reference?: string | null
+          customer_user_id?: string | null
+          due_at?: string | null
+          email_send_count?: number
+          generation_attempts?: number
+          generation_error?: string | null
+          generation_locked_at?: string | null
+          grace_period_days?: number
+          id?: string
+          includes_future_courses?: boolean
+          internal_notes?: string | null
+          internal_reference?: string | null
+          invoice_description: string
+          invoice_number: string
+          invoice_type: string
+          last_email_sent_at?: string | null
+          last_synced_at?: string | null
+          link_expires_at?: string | null
+          paid_amount_minor?: number | null
+          paid_at?: string | null
+          paid_tax_minor?: number | null
+          past_due_notified_at?: string | null
+          refunded_amount_minor?: number
+          reminder_sent_at?: string | null
+          revision_of?: string | null
+          seat_limit?: number | null
+          selected_course_snapshot?: Json
+          service_summary_generated_at?: string | null
+          service_summary_storage_path?: string | null
+          service_summary_version?: number
+          snapshot_taken_at?: string
+          status?: string
+          status_reason?: string | null
+          updated_at?: string
+          upfront_fee_minor?: number
+          voided_at?: string | null
+        }
+        Update: {
+          access_duration_days?: number | null
+          access_end_at?: string | null
+          access_mode?: string | null
+          allow_contact_invites?: boolean
+          amount_minor?: number
+          billing_cycles?: number | null
+          billing_interval_days?: number | null
+          billing_type?: string
+          collection_method?: string
+          cancelled_at?: string | null
+          company_description?: string | null
+          company_id?: string | null
+          company_name?: string | null
+          company_services?: string | null
+          course_ids?: string[]
+          course_selection_mode?: string
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string | null
+          customer_reference?: string | null
+          customer_user_id?: string | null
+          due_at?: string | null
+          email_send_count?: number
+          generation_attempts?: number
+          generation_error?: string | null
+          generation_locked_at?: string | null
+          grace_period_days?: number
+          id?: string
+          includes_future_courses?: boolean
+          internal_notes?: string | null
+          internal_reference?: string | null
+          invoice_description?: string
+          invoice_number?: string
+          invoice_type?: string
+          last_email_sent_at?: string | null
+          last_synced_at?: string | null
+          link_expires_at?: string | null
+          paid_amount_minor?: number | null
+          paid_at?: string | null
+          paid_tax_minor?: number | null
+          past_due_notified_at?: string | null
+          refunded_amount_minor?: number
+          reminder_sent_at?: string | null
+          revision_of?: string | null
+          seat_limit?: number | null
+          selected_course_snapshot?: Json
+          service_summary_generated_at?: string | null
+          service_summary_storage_path?: string | null
+          service_summary_version?: number
+          snapshot_taken_at?: string
+          status?: string
+          status_reason?: string | null
+          updated_at?: string
+          upfront_fee_minor?: number
+          voided_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_invoices_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_invoices_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_invoices_customer_user_id_fkey"
+            columns: ["customer_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_invoices_revision_of_fkey"
+            columns: ["revision_of"]
+            isOneToOne: false
+            referencedRelation: "custom_invoices"
             referencedColumns: ["id"]
           },
         ]
@@ -2325,6 +2916,106 @@ export type Database = {
           {
             foreignKeyName: "integration_settings_updated_by_fkey"
             columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_entitlements: {
+        Row: {
+          beneficiary_email: string | null
+          company_id: string | null
+          contract_ends_at: string | null
+          course_selection_mode: string
+          created_at: string
+          entitlement_type: string
+          expired_notified_at: string | null
+          expires_at: string | null
+          expiry_reminder_sent_at: string | null
+          grace_period_days: number
+          id: string
+          included_course_ids: string[]
+          includes_future_courses: boolean
+          invoice_id: string
+          last_renewal_payment_id: string | null
+          starts_at: string
+          status: string
+          status_reason: string | null
+          subscription_status: string | null
+          updated_at: string
+          user_id: string | null
+          whop_membership_id: string | null
+          whop_payment_id: string | null
+        }
+        Insert: {
+          beneficiary_email?: string | null
+          company_id?: string | null
+          contract_ends_at?: string | null
+          course_selection_mode: string
+          created_at?: string
+          entitlement_type: string
+          expired_notified_at?: string | null
+          expires_at?: string | null
+          expiry_reminder_sent_at?: string | null
+          grace_period_days?: number
+          id?: string
+          included_course_ids?: string[]
+          includes_future_courses?: boolean
+          invoice_id: string
+          last_renewal_payment_id?: string | null
+          starts_at: string
+          status?: string
+          status_reason?: string | null
+          subscription_status?: string | null
+          updated_at?: string
+          user_id?: string | null
+          whop_membership_id?: string | null
+          whop_payment_id?: string | null
+        }
+        Update: {
+          beneficiary_email?: string | null
+          company_id?: string | null
+          contract_ends_at?: string | null
+          course_selection_mode?: string
+          created_at?: string
+          entitlement_type?: string
+          expired_notified_at?: string | null
+          expires_at?: string | null
+          expiry_reminder_sent_at?: string | null
+          grace_period_days?: number
+          id?: string
+          included_course_ids?: string[]
+          includes_future_courses?: boolean
+          invoice_id?: string
+          last_renewal_payment_id?: string | null
+          starts_at?: string
+          status?: string
+          status_reason?: string | null
+          subscription_status?: string | null
+          updated_at?: string
+          user_id?: string | null
+          whop_membership_id?: string | null
+          whop_payment_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_entitlements_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_entitlements_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: true
+            referencedRelation: "custom_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoice_entitlements_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -3565,6 +4256,7 @@ export type Database = {
           checkout_session_id: string | null
           created_at: string
           currency: string
+          custom_invoice_id: string | null
           discount_cents: number
           failure_reason: string | null
           id: string
@@ -3593,6 +4285,7 @@ export type Database = {
           checkout_session_id?: string | null
           created_at?: string
           currency?: string
+          custom_invoice_id?: string | null
           discount_cents?: number
           failure_reason?: string | null
           id?: string
@@ -3621,6 +4314,7 @@ export type Database = {
           checkout_session_id?: string | null
           created_at?: string
           currency?: string
+          custom_invoice_id?: string | null
           discount_cents?: number
           failure_reason?: string | null
           id?: string
@@ -3648,6 +4342,13 @@ export type Database = {
             columns: ["checkout_session_id"]
             isOneToOne: false
             referencedRelation: "checkout_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_transactions_custom_invoice_id_fkey"
+            columns: ["custom_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "custom_invoices"
             referencedColumns: ["id"]
           },
           {
@@ -5107,6 +5808,95 @@ export type Database = {
           },
         ]
       }
+      whop_invoice_mappings: {
+        Row: {
+          checkout_link: string | null
+          cleanup_status: string
+          created_at: string
+          environment: string
+          id: string
+          last_synced_at: string | null
+          local_invoice_id: string
+          payment_url: string | null
+          provider_currency: string | null
+          provider_status: string | null
+          provider_tax_minor: number | null
+          provider_total_minor: number | null
+          raw: Json
+          totals_status: string | null
+          updated_at: string
+          whop_account_id: string
+          whop_checkout_configuration_id: string | null
+          whop_invoice_id: string | null
+          whop_invoice_number: string | null
+          whop_member_id: string | null
+          whop_membership_id: string | null
+          whop_payment_id: string | null
+          whop_product_id: string | null
+          whop_variant_id: string | null
+        }
+        Insert: {
+          checkout_link?: string | null
+          cleanup_status?: string
+          created_at?: string
+          environment: string
+          id?: string
+          last_synced_at?: string | null
+          local_invoice_id: string
+          payment_url?: string | null
+          provider_currency?: string | null
+          provider_status?: string | null
+          provider_tax_minor?: number | null
+          provider_total_minor?: number | null
+          raw?: Json
+          totals_status?: string | null
+          updated_at?: string
+          whop_account_id: string
+          whop_checkout_configuration_id?: string | null
+          whop_invoice_id?: string | null
+          whop_invoice_number?: string | null
+          whop_member_id?: string | null
+          whop_membership_id?: string | null
+          whop_payment_id?: string | null
+          whop_product_id?: string | null
+          whop_variant_id?: string | null
+        }
+        Update: {
+          checkout_link?: string | null
+          cleanup_status?: string
+          created_at?: string
+          environment?: string
+          id?: string
+          last_synced_at?: string | null
+          local_invoice_id?: string
+          payment_url?: string | null
+          provider_currency?: string | null
+          provider_status?: string | null
+          provider_tax_minor?: number | null
+          provider_total_minor?: number | null
+          raw?: Json
+          totals_status?: string | null
+          updated_at?: string
+          whop_account_id?: string
+          whop_checkout_configuration_id?: string | null
+          whop_invoice_id?: string | null
+          whop_invoice_number?: string | null
+          whop_member_id?: string | null
+          whop_membership_id?: string | null
+          whop_payment_id?: string | null
+          whop_product_id?: string | null
+          whop_variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whop_invoice_mappings_local_invoice_id_fkey"
+            columns: ["local_invoice_id"]
+            isOneToOne: true
+            referencedRelation: "custom_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -5302,9 +6092,17 @@ export type Database = {
         }[]
       }
       next_billing_document_number: { Args: never; Returns: number }
+      next_custom_invoice_number: {
+        Args: { p_prefix?: string }
+        Returns: string
+      }
       recalculate_enrollment_progress: {
         Args: { p_course: string; p_user: string }
         Returns: number
+      }
+      refresh_company_access_status: {
+        Args: { p_company: string }
+        Returns: string
       }
       release_stale_email_locks: {
         Args: { p_older_than_minutes?: number }
@@ -5349,6 +6147,14 @@ export type Database = {
       start_direct_conversation: {
         Args: { p_course?: string; p_other: string; p_subject?: string }
         Returns: string
+      }
+      sync_invoice_entitlement_access: {
+        Args: { p_entitlement: string }
+        Returns: {
+          course_id: string
+          inserted: boolean
+          user_id: string
+        }[]
       }
       teacher_assignment_stats: {
         Args: { p_course_ids: string[]; p_from: string; p_to: string }

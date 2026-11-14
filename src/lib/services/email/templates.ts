@@ -15,6 +15,13 @@ const v = (name: string, description: string, sample: string): TemplateVariable 
 const FIRST_NAME = v("first_name", "Recipient's first name", "Amira");
 const COURSE = v("course_title", "Course title", "Shopify Store Launch");
 const PRODUCT = v("product_name", "Product or plan purchased", "Shopify Store Launch — 90 days");
+const INVOICE_NUMBER = v("invoice_number", "Foremint invoice number", "FMA-INV-2026-001001");
+const INVOICE_DESCRIPTION = v("invoice_description", "What is being purchased", "Custom Digital Business Training Package — 2026");
+const AMOUNT = v("amount", "Amount due", "$500.00");
+const ACCESS_SUMMARY = v("access_summary", "Sentence about the access period", "Access runs until 12 May 2027.");
+const COURSE_LIST = v("course_list", "Courses in the package", "Amazon FBA Foundations, Shopify Store Launch, Digital Marketing Fundamentals");
+const COMPANY_NAME = v("company_name", "Company name", "ABC Digital Solutions");
+const PACKAGE_NAME = v("package_name", "Package name", "ABC Digital Solutions — Custom Digital Business Training Package");
 
 export const GLOBAL_VARIABLES: TemplateVariable[] = [
   v("brand_name", "Academy name from settings", "Foremint Academy"),
@@ -118,6 +125,20 @@ export const TEMPLATE_VARIABLES: Record<string, TemplateVariable[]> = {
     v("announcement_body", "Announcement text", "Every Thursday this month we're running live store reviews."),
     v("preview", "Short preview", "Every Thursday this month…"),
   ],
+  "invoice.payment_link": [FIRST_NAME, INVOICE_NUMBER, INVOICE_DESCRIPTION, AMOUNT, v("due_date", "Payment due date", "28 Nov 2026")],
+  "invoice.reminder": [FIRST_NAME, INVOICE_NUMBER, INVOICE_DESCRIPTION, AMOUNT, v("due_date", "Payment due date", "28 Nov 2026")],
+  "invoice.past_due": [FIRST_NAME, INVOICE_NUMBER, INVOICE_DESCRIPTION, AMOUNT, v("due_date", "Payment due date", "28 Nov 2026")],
+  "invoice.voided": [FIRST_NAME, INVOICE_NUMBER, INVOICE_DESCRIPTION],
+  "invoice.payment_received": [FIRST_NAME, INVOICE_NUMBER, INVOICE_DESCRIPTION, ACCESS_SUMMARY],
+  "invoice.account_activation": [FIRST_NAME, INVOICE_DESCRIPTION, COURSE_LIST, ACCESS_SUMMARY, v("expires_at", "When the link expires", "21 Nov 2026")],
+  "company.contact_invitation": [FIRST_NAME, COMPANY_NAME, COURSE_LIST, ACCESS_SUMMARY, v("expires_at", "When the link expires", "21 Nov 2026")],
+  "company.employee_invitation": [FIRST_NAME, COMPANY_NAME, v("inviter_name", "Who sent the invitation", "John Smith"), COURSE_LIST, ACCESS_SUMMARY, v("expires_at", "When the link expires", "21 Nov 2026")],
+  "company.access_activated": [FIRST_NAME, COMPANY_NAME, COURSE_LIST, ACCESS_SUMMARY],
+  "company.member_joined": [FIRST_NAME, COMPANY_NAME, v("member_name", "New member", "Sara Khan"), v("member_email", "New member email", "sara@company.com")],
+  "company.member_removed": [FIRST_NAME, COMPANY_NAME],
+  "company.package_renewed": [FIRST_NAME, PACKAGE_NAME, ACCESS_SUMMARY],
+  "company.access_expiring": [FIRST_NAME, PACKAGE_NAME, v("ends_at", "When access ends", "12 May 2027")],
+  "company.access_expired": [FIRST_NAME, PACKAGE_NAME, v("ended_at", "When access ended", "12 May 2027")],
   "communication.contact_received": [
     v("lead_name", "Name from the contact form", "Amira Haddad"),
     v("lead_email", "Email from the contact form", "amira@example.com"),
@@ -127,7 +148,14 @@ export const TEMPLATE_VARIABLES: Record<string, TemplateVariable[]> = {
 };
 
 /** Templates whose links grant account access — their links are never shown in admin views. */
-export const SENSITIVE_LINK_TEMPLATES = new Set(["auth.verify_email", "auth.password_reset", "auth.teacher_invitation"]);
+export const SENSITIVE_LINK_TEMPLATES = new Set([
+  "auth.verify_email",
+  "auth.password_reset",
+  "auth.teacher_invitation",
+  "invoice.account_activation",
+  "company.contact_invitation",
+  "company.employee_invitation",
+]);
 
 export function variablesFor(key: string): TemplateVariable[] {
   return [...(TEMPLATE_VARIABLES[key] ?? [FIRST_NAME]), ...GLOBAL_VARIABLES];

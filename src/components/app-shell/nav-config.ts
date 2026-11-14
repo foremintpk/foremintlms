@@ -5,10 +5,12 @@ import {
   BookOpen,
   BookOpenCheck,
   Building2,
+  CalendarClock,
   ClipboardCheck,
   ClipboardList,
   Compass,
   CreditCard,
+  FilePlus2,
   FileSpreadsheet,
   FileText,
   FolderTree,
@@ -41,13 +43,18 @@ import {
   Trophy,
   UserCheck,
   Users,
+  UsersRound,
   Wallet,
+  WalletCards,
   type LucideIcon,
 } from "lucide-react";
 
 export type ShellArea = "learn" | "teach" | "admin";
 
-export type BadgeKey = "unreadMessages" | "unreadNotifications" | "pendingReviews" | "openTickets" | "pendingCourses";
+export type BadgeKey = "unreadMessages" | "unreadNotifications" | "pendingReviews" | "openTickets" | "pendingCourses" | "invoicesNeedingReview";
+
+/** Optional nav entries shown only when the server says the user has the feature. */
+export type NavFeature = "company";
 
 export interface NavItem {
   title: string;
@@ -56,6 +63,10 @@ export interface NavItem {
   badge?: BadgeKey;
   /** Match only the exact path (for section roots like /admin). */
   exact?: boolean;
+  /** Paths under href that belong to another item (not highlighted here). */
+  excludePrefixes?: string[];
+  /** Only shown when the shell is given this feature. */
+  feature?: NavFeature;
 }
 
 export interface NavGroup {
@@ -72,6 +83,7 @@ export const NAV: Record<ShellArea, NavGroup[]> = {
         { title: "Live classes", href: "/learn/live", icon: Radio },
         { title: "Assignments", href: "/learn/assignments", icon: ClipboardList },
         { title: "Certificates", href: "/learn/certificates", icon: Award },
+        { title: "My company", href: "/learn/company", icon: Building2, feature: "company" },
       ],
     },
     {
@@ -150,9 +162,22 @@ export const NAV: Record<ShellArea, NavGroup[]> = {
         { title: "Pricing & plans", href: "/admin/pricing", icon: Package },
         { title: "Bundles & memberships", href: "/admin/bundles", icon: Layers },
         { title: "Coupons", href: "/admin/coupons", icon: TicketPercent },
-        { title: "Payments", href: "/admin/payments", icon: Wallet },
-        { title: "Invoices", href: "/admin/invoices", icon: Receipt },
+      ],
+    },
+    {
+      label: "Billing & invoicing",
+      items: [
+        { title: "Billing overview", href: "/admin/billing", icon: WalletCards, exact: true },
+        { title: "Custom invoices", href: "/admin/billing/invoices", icon: FileText, badge: "invoicesNeedingReview", excludePrefixes: ["/admin/billing/invoices/new"] },
+        { title: "Create custom invoice", href: "/admin/billing/invoices/new", icon: FilePlus2 },
+        { title: "Company accounts", href: "/admin/billing/companies", icon: Building2 },
+        { title: "Company members", href: "/admin/billing/members", icon: UsersRound },
+        { title: "Payment history", href: "/admin/payments", icon: Wallet },
         { title: "Subscriptions", href: "/admin/subscriptions", icon: Repeat },
+        { title: "Invoice subscriptions", href: "/admin/billing/subscriptions", icon: Repeat },
+        { title: "Expiring access", href: "/admin/billing/expiring", icon: CalendarClock },
+        { title: "Receipts & documents", href: "/admin/invoices", icon: Receipt },
+        { title: "Invoice settings", href: "/admin/billing/settings", icon: Settings },
       ],
     },
     {

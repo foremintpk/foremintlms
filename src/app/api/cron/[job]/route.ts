@@ -12,6 +12,7 @@ import { publishScheduledContent } from "@/lib/services/courses/scheduled";
 import { issuePendingCertificates } from "@/lib/services/certificates";
 import { syncProcessingVideos } from "@/lib/services/video/sync";
 import { getSetting } from "@/lib/settings";
+import { runInvoicingMaintenance } from "@/lib/services/invoicing/maintenance";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
@@ -38,6 +39,9 @@ const JOBS: Record<string, () => Promise<unknown>> = {
   "live-artifacts": () => syncLiveSessionArtifacts(),
   "certificates": () => issuePendingCertificates(),
   // daily
+  // custom invoices: payment reminders, past-due, link expiry, package expiry,
+  // open-invoice and subscription reconciliation with Whop
+  "invoicing": () => runInvoicingMaintenance(),
   "access-expiry-reminders": async () => remindExpiringEntitlements(await getSetting<number>("learning.access_expiry_reminder_days", 7)),
   "payment-reconciliation": async () => {
     // Catch-up: anything still missing from Whop (or whose sync failed) is pushed first.

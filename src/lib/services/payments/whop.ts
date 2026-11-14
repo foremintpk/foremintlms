@@ -16,7 +16,9 @@ import { getIntegration, IntegrationNotConfiguredError } from "@/lib/services/in
  *   memberships created from that checkout.
  */
 
-export const WHOP_API_VERSION = "2026-11-10-1";
+// 2026-11-11: recurring invoices bill initial_price + renewal_price on the first
+// invoice (custom invoicing relies on this). No other change from 2026-11-10-1.
+export const WHOP_API_VERSION = "2026-11-11";
 
 export interface WhopConfig {
   apiKey: string;

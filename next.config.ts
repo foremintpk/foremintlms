@@ -92,7 +92,12 @@ const nextConfig: NextConfig = {
       "./node_modules/@fontsource/funnel-sans/files/*-latin-*-normal.woff",
       "./public/brand/foremint-mark-256.png",
     ],
-    "/**/opengraph-image*": ["./src/components/site/og/fonts/*"],
+    "/api/billing/custom-invoices/[id]/summary": [
+      "./node_modules/@fontsource/funnel-display/files/*-latin-*-normal.woff",
+      "./node_modules/@fontsource/funnel-sans/files/*-latin-*-normal.woff",
+      "./public/brand/foremint-mark-256.png",
+    ],
+    "/**/opengraph-image*": ["./src/components/site/og/fonts/*", "./public/brand/foremint-mark-256.png"],
   },
   images: {
     formats: ["image/avif", "image/webp"],

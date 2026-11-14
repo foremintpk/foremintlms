@@ -63,12 +63,14 @@ export async function getShellBadges(user: SessionUser, area: ShellArea): Promis
   }
 
   if (area === "admin") {
-    const [tickets, pendingCourses] = await Promise.all([
+    const [tickets, pendingCourses, invoicesNeedingReview] = await Promise.all([
       admin.from("support_tickets").select("id", { count: "exact", head: true }).in("status", ["open", "in_progress"]),
       admin.from("courses").select("id", { count: "exact", head: true }).eq("status", "in_review"),
+      admin.from("custom_invoices").select("id", { count: "exact", head: true }).eq("status", "under_review"),
     ]);
     badges.openTickets = tickets.count ?? 0;
     badges.pendingCourses = pendingCourses.count ?? 0;
+    badges.invoicesNeedingReview = invoicesNeedingReview.count ?? 0;
   }
 
   return badges;

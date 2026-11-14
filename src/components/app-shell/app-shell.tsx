@@ -7,18 +7,20 @@ import { Separator } from "@/components/ui/separator";
 import { AppSidebar } from "./app-sidebar";
 import { MobileTabBar } from "./mobile-tab-bar";
 import { UserMenu } from "./user-menu";
-import type { ShellArea } from "./nav-config";
+import type { NavFeature, ShellArea } from "./nav-config";
 import type { ShellBadges, ShellUser } from "./types";
 
 export function AppShell({
   area,
   user,
   badges,
+  features = [],
   children,
 }: {
   area: ShellArea;
   user: ShellUser;
   badges: ShellBadges;
+  features?: NavFeature[];
   children: React.ReactNode;
 }) {
   const unread = badges.unreadNotifications ?? 0;
@@ -26,7 +28,7 @@ export function AppShell({
 
   return (
     <SidebarProvider>
-      <AppSidebar area={area} badges={badges} />
+      <AppSidebar area={area} badges={badges} features={features} />
       <SidebarInset className="min-w-0">
         <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b bg-background/85 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/70 sm:px-4 md:rounded-t-xl">
           <SidebarTrigger className="-ml-1" aria-label="Toggle navigation" />

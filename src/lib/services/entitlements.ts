@@ -12,7 +12,7 @@ import type { TablesUpdate } from "@/types/database";
  * reachable from trusted server code.
  */
 
-export type EntitlementSource = "purchase" | "subscription" | "membership" | "bundle" | "free" | "manual";
+export type EntitlementSource = "purchase" | "subscription" | "membership" | "bundle" | "free" | "manual" | "invoice" | "company";
 
 export interface GrantInput {
   userId: string;
@@ -254,7 +254,9 @@ export async function expireDueEntitlements(): Promise<number> {
   const byId = new Map((courses ?? []).map((c) => [c.id, c]));
   for (const row of rows) {
     const course = row.course_id ? byId.get(row.course_id) : null;
-    if (!course || row.source === "subscription") continue; // subscription endings are announced by billing events
+    // Subscription endings are announced by billing events; custom-invoice and
+    // company packages send one message per package (services/invoicing/maintenance).
+    if (!course || row.source === "subscription" || row.source === "company" || row.source === "invoice") continue;
     await notify(row.user_id, {
       category: "billing",
       type: "access_expired",
@@ -279,7 +281,7 @@ export async function remindExpiringEntitlements(daysAhead: number): Promise<num
     .from("course_entitlements")
     .select("id, user_id, course_id, expires_at")
     .eq("status", "active")
-    .neq("source", "subscription")
+    .not("source", "in", "(subscription,company,invoice)")
     .is("expiry_reminder_sent_at", null)
     .gt("expires_at", now.toISOString())
     .lte("expires_at", horizon)
