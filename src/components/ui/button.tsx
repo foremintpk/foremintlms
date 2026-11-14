@@ -75,14 +75,16 @@ function Button({
       disabled={disabled || busy}
       className={cn(
         buttonVariants({ variant, size, className }),
-        busy && "cursor-progress [&>svg:not([data-slot=spinner])]:hidden"
+        // Busy: show only the built-in spinner. Hide the button's icons and any
+        // spinner the caller renders itself, so there is never a second one.
+        busy && "cursor-progress [&>svg:not([data-busy-spinner])]:hidden [&_.animate-spin:not([data-busy-spinner])]:hidden"
       )}
       // A busy button keeps (almost) full colour; only truly disabled ones fade.
       style={busy ? { ...style, opacity: 0.85 } : style}
       onClick={handleClick}
       {...props}
     >
-      {busy ? <Spinner aria-hidden data-icon="inline-start" /> : null}
+      {busy ? <Spinner aria-hidden data-icon="inline-start" data-busy-spinner="" /> : null}
       {children}
     </button>
   )
