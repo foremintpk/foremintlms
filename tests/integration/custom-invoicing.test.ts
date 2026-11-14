@@ -129,9 +129,9 @@ describe.skipIf(!hasServerEnv)("custom invoicing: fulfilment, company access and
     const { data: courses } = await admin.from("courses").select("id").eq("status", "published").order("title").limit(4);
     courseIds = (courses ?? []).slice(0, 3).map((c) => c.id);
     otherCourseId = courses![3].id;
-    individual = await makeUser("buyer");
-    outsider = await makeUser("outsider");
-    teacher = await makeUser("teacher", ["teacher"]);
+    individual = await makeUser("inv-buyer");
+    outsider = await makeUser("inv-outsider");
+    teacher = await makeUser("inv-teacher", ["teacher"]);
   });
 
   afterAll(async () => {
@@ -164,7 +164,7 @@ describe.skipIf(!hasServerEnv)("custom invoicing: fulfilment, company access and
   });
 
   it("A (payment link): a client pays the direct link; the payment is matched by its checkout and the link is closed", async () => {
-    const client = await makeUser("linkbuyer");
+    const client = await makeUser("inv-linkbuyer");
     const { data: number } = await admin.rpc("next_custom_invoice_number", { p_prefix: "IT" });
     const { data: inv } = await admin
       .from("custom_invoices")
@@ -257,7 +257,7 @@ describe.skipIf(!hasServerEnv)("custom invoicing: fulfilment, company access and
     expect(invite?.token_hash).toMatch(/^[0-9a-f]{64}$/);
     expect(emails.some((e) => e.templateKey === "invoice.account_activation" && e.to === email && String(e.payload?.cta_url).includes("/join/"))).toBe(true);
 
-    const buyer = await makeUser(`newbuyer`);
+    const buyer = await makeUser(`inv-newbuyer`);
     // makeUser uses its own address; accept with the invited one to mimic account creation from the link.
     const { acceptAccessInvitation } = await import("@/lib/services/invoicing/acceptance");
     await expect(acceptAccessInvitation(invite as never, { id: buyer.id, email: buyer.email })).rejects.toThrow(/different email/);
@@ -276,10 +276,10 @@ describe.skipIf(!hasServerEnv)("custom invoicing: fulfilment, company access and
     let packageExpiry = "";
 
     beforeAll(async () => {
-      contact = await makeUser("contact");
-      employee = await makeUser("employee");
-      lateJoiner = await makeUser("late");
-      otherCo = await makeUser("otherco");
+      contact = await makeUser("inv-contact");
+      employee = await makeUser("inv-employee");
+      lateJoiner = await makeUser("inv-late");
+      otherCo = await makeUser("inv-otherco");
     });
 
     it("paying a company invoice creates the workspace and makes the existing contact its manager", async () => {
@@ -391,7 +391,7 @@ describe.skipIf(!hasServerEnv)("custom invoicing: fulfilment, company access and
   });
 
   it("F: a recurring invoice follows the live membership: renewal extends once, cancellation keeps the paid period, a contract cap ends it", async () => {
-    const sub = await makeUser("subscriber");
+    const sub = await makeUser("inv-subscriber");
     const memId = `mem_it_${runId}`;
     const periodEnd = new Date(Date.now() + 30 * DAY).toISOString();
     whopMemberships.set(memId, { id: memId, status: "active", cancel_at_period_end: false, current_period_end: periodEnd, expires_at: null, metadata: {} });
